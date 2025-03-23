@@ -1,0 +1,47 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DNS-BLM.Api", "src\DNS-BLM.Api\DNS-BLM.Api.csproj", "{B84014E2-5FFE-469B-906B-09F7A9744547}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{82A1AC06-996C-439B-BD53-1A82FB6CF5BD}"
+	ProjectSection(SolutionItems) = preProject
+		compose.yaml = compose.yaml
+		.gitignore = .gitignore
+		src\DNS-BLM.Api\Dockerfile = src\DNS-BLM.Api\Dockerfile
+	EndProjectSection
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DNS-BLM.Domain", "src\DNS-BLM.Domain\DNS-BLM.Domain.csproj", "{9344F763-8F38-40DB-BCC2-50379B19E379}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DNS-BLM.Application", "src\DNS-BLM.Application\DNS-BLM.Application.csproj", "{99312644-9D27-43BA-B0AA-F4F4178532F9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DNS-BLM.Infrastructure", "src\DNS-BLM.Infrastructure\DNS-BLM.Infrastructure.csproj", "{DF7B97BE-DE23-49D0-AF31-A0A193F1EF71}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Tests", "test\Tests\Tests.csproj", "{579732E5-C6BF-41CB-BF50-AD2B4E7A65D9}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B84014E2-5FFE-469B-906B-09F7A9744547}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B84014E2-5FFE-469B-906B-09F7A9744547}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B84014E2-5FFE-469B-906B-09F7A9744547}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B84014E2-5FFE-469B-906B-09F7A9744547}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9344F763-8F38-40DB-BCC2-50379B19E379}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9344F763-8F38-40DB-BCC2-50379B19E379}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9344F763-8F38-40DB-BCC2-50379B19E379}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9344F763-8F38-40DB-BCC2-50379B19E379}.Release|Any CPU.Build.0 = Release|Any CPU
+		{99312644-9D27-43BA-B0AA-F4F4178532F9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{99312644-9D27-43BA-B0AA-F4F4178532F9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{99312644-9D27-43BA-B0AA-F4F4178532F9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{99312644-9D27-43BA-B0AA-F4F4178532F9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DF7B97BE-DE23-49D0-AF31-A0A193F1EF71}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DF7B97BE-DE23-49D0-AF31-A0A193F1EF71}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DF7B97BE-DE23-49D0-AF31-A0A193F1EF71}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DF7B97BE-DE23-49D0-AF31-A0A193F1EF71}.Release|Any CPU.Build.0 = Release|Any CPU
+		{579732E5-C6BF-41CB-BF50-AD2B4E7A65D9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{579732E5-C6BF-41CB-BF50-AD2B4E7A65D9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{579732E5-C6BF-41CB-BF50-AD2B4E7A65D9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{579732E5-C6BF-41CB-BF50-AD2B4E7A65D9}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
