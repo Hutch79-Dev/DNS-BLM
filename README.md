@@ -2,18 +2,16 @@
 DNS-BLM is a tool that monitors blocklists (currently utilizing VirusTotal) to check if your domains are flagged as malicious.
 
 ## Installation
-Currently, there is no public Docker image available. You will need to clone this repository and then run the provided Docker Compose file.
+Copy the Docker Compose file below and update the environment variables.  
+Once done, you can start it using `docker compose up -d`.
 
 ### Example compose.yaml
 ```yaml
 services:
-  dns-blm.api:
-    image: dns-blm.api
-    build:
-      context: .
-      dockerfile: src/DNS-BLM.Api/Dockerfile
+  dns-blm:
+    image: ghcr.io/hutch79/dns-blm:dev
     ports:
-      - 8080:8080
+      - 7901:8080
     environment:
       - DNS-BLM__API_Credentials__VirusTotal=ENTER-YOUR-VIRUSTOTAL-API-KEY-HERE
       - DNS-BLM__ReportReceiver=reports@example.com
