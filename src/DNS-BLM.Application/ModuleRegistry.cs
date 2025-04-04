@@ -1,6 +1,5 @@
 using System.Net.Http.Headers;
 using DNS_BLM.Application.Services;
-using DNS_BLM.Application.Services.BlacklistScannerServices;
 using DNS_BLM.Application.Services.NotificationServices;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,10 +20,14 @@ public static class ModuleRegistry
 
         services.AddSingleton<INotificationService, MailNotificationService>();
 
+
         string? virusTotalApiKey = configuration["DNS-BLM:API_Credentials:VirusTotal"];
         if (virusTotalApiKey != null)
         {
-            services.AddSingleton<IBlacklistScanner, VirusTotalService>();
+            var type = typeof(IBlacklistScanner).Assembly.GetTypes().Where(e => e == typeof(IBlacklistScanner)).SingleOrDefault(e => e.Name == "VirusTotalService");
+
+            services.AddSingleton(typeof(IBlacklistScanner), type);
+
             services.AddHttpClient("VirusTotal", client =>
             {
                 client.BaseAddress = new Uri("https://www.virustotal.com/api/v3/");

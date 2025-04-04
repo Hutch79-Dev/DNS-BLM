@@ -30,7 +30,7 @@ public class VirusTotalService : IBlacklistScanner
                 using (JsonDocument doc = JsonDocument.Parse(analysisResponseBody))
                 {
                     JsonElement root = doc.RootElement;
-                    analysisId = root.GetProperty("data").GetProperty("id").GetString();
+                    analysisId = root.GetProperty("data").GetProperty("id").GetString(); // ToDo: Parsing in Object
                 }
 
                 var response = await client.GetAsync($"analyses/{analysisId}");
@@ -46,7 +46,7 @@ public class VirusTotalService : IBlacklistScanner
                 using (JsonDocument doc = JsonDocument.Parse(responseBody))
                 {
                     JsonElement root = doc.RootElement;
-                    var statsSection = root.GetProperty("data").GetProperty("attributes").GetProperty("stats");
+                    var statsSection = root.GetProperty("data").GetProperty("attributes").GetProperty("stats"); // ToDo: Parsing in Object
                     statsMalicious = statsSection.GetProperty("malicious").GetInt32();
                     statsSuspicious = statsSection.GetProperty("suspicious").GetInt32();
                     statsUndetected = statsSection.GetProperty("undetected").GetInt32();
@@ -56,7 +56,7 @@ public class VirusTotalService : IBlacklistScanner
                     var unixTimestamp = root.GetProperty("data").GetProperty("attributes").GetProperty("date").GetInt32();
                     lastAnalysisDate = DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).DateTime;
                 }
-
+                // ToDo: Message Builder in eigenen Service auslagern
                 string statsSummary = $@"
 Statistics Summary for Domain {domain}:
 ---------------------------------------------------
