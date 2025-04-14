@@ -1,5 +1,6 @@
 using DNS_BLM.Api.TimedTasks;
 using DNS_BLM.Application;
+using DNS_BLM.Infrastructure;
 using Scalar.AspNetCore;
 using Sentry.Extensibility;
 
@@ -22,6 +23,8 @@ builder.Services.AddControllers();
 builder.Services.AddOpenApi();
 
 builder.Services.AddApplicationModule(builder.Configuration);
+builder.Services.AddInfrastructureModule(builder.Configuration);
+
 builder.Services.AddTimedTaskModules();
 
 

@@ -18,7 +18,7 @@ public class DnsBlocklistScanController : ControllerBase
     }
 
     [HttpGet("ScanConfiguredDomains", Name = "ScanConfiguredDomains")]
-    public async Task<List<string>> ScanConfiguredDomains()
+    public async Task<string> ScanConfiguredDomains()
     {
         var domains = _configuration.GetSection("DNS-BLM:Domains").Get<List<string>>();
         
@@ -27,13 +27,13 @@ public class DnsBlocklistScanController : ControllerBase
         return await _mediator.Send(new ScannBlacklistCommand(domains));
     }
 
-    [HttpGet("ScanCustomDomain", Name = "ScanCustomDomain")]
-    public async Task<string> ScanCustomDomain(string domain)
-    {
-        ArgumentException.ThrowIfNullOrWhiteSpace(domain, nameof(domain));
-        
-        var domains = new List<string> {domain};
-        var result =  await _mediator.Send(new ScannBlacklistCommand(domains));
-        return result.First();
-    }
+    // [HttpGet("ScanCustomDomain", Name = "ScanCustomDomain")]
+    // public async Task<string> ScanCustomDomain(string domain)
+    // {
+    //     ArgumentException.ThrowIfNullOrWhiteSpace(domain, nameof(domain));
+    //     
+    //     var domains = new List<string> {domain};
+    //     var result =  await _mediator.Send(new ScannBlacklistCommand(domains));
+    //     return result.First();
+    // }
 }

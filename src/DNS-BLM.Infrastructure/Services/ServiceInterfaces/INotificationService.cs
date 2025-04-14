@@ -1,4 +1,4 @@
-namespace DNS_BLM.Application.Services;
+namespace DNS_BLM.Infrastructure.Services.ServiceInterfaces;
 
 public interface INotificationService
 {

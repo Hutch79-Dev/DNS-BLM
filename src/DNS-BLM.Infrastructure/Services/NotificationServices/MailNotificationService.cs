@@ -1,9 +1,10 @@
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using DNS_BLM.Infrastructure.Services.ServiceInterfaces;
 using Microsoft.Extensions.Configuration;
 
-namespace DNS_BLM.Application.Services.NotificationServices;
+namespace DNS_BLM.Infrastructure.Services.NotificationServices;
 
 public class MailNotificationService : INotificationService, IDisposable
 {
