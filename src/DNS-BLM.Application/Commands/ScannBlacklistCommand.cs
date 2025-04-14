@@ -4,35 +4,21 @@ using MediatR;
 
 namespace DNS_BLM.Application.Commands
 {
-    public class ScannBlacklistCommand : IRequest<string>
+    public class ScannBlacklistCommand(List<string> domains) : IRequest<string>
     {
-        public List<string> Domains { get; }
-
-        public ScannBlacklistCommand(List<string> domains)
-        {
-            Domains = domains;
-        }
+        public List<string> Domains { get; } = domains;
     }
     
-    public class ScannBlacklistCommandHandler : IRequestHandler<ScannBlacklistCommand, string>
+    public class ScannBlacklistCommandHandler(IEnumerable<IBlacklistScanner> scanners, MessageService messageService) : IRequestHandler<ScannBlacklistCommand, string>
     {
-        private readonly IBlacklistScanner _scanner;
-        private readonly MessageService _messageService;
-
-        public ScannBlacklistCommandHandler(IBlacklistScanner scanner, MessageService messageService)
-        {
-            _scanner = scanner;
-            _messageService = messageService;
-        }
-
         public async Task<string> Handle(ScannBlacklistCommand request, CancellationToken cancellationToken)
         {
-            // foreach (var scanner in _scanner)
-            // {
-                await _scanner.Scan(request.Domains);
-            // }
+            foreach (var scanner in scanners)
+            {
+                await scanner.Scan(request.Domains);
+            }
 
-            return _messageService.GetResults();
+            return messageService.GetResults();
         }
     }
 }
