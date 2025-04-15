@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace DNS_BLM.Application.Commands
 {
-    public class ScannBlacklistCommand(List<string> domains, bool sendMail = true) : IRequest<string>
+    public class ScanBlacklistCommand(List<string> domains, bool sendMail = true) : IRequest<string>
     {
         public List<string> Domains { get; } = domains;
         public bool SendMail { get; } = sendMail;
@@ -16,9 +16,9 @@ namespace DNS_BLM.Application.Commands
         MessageService messageService, 
         INotificationService notificationService,
         ILogger<ScannBlacklistCommandHandler> logger
-        ) : IRequestHandler<ScannBlacklistCommand, string>
+        ) : IRequestHandler<ScanBlacklistCommand, string>
     {
-        public async Task<string> Handle(ScannBlacklistCommand request, CancellationToken cancellationToken)
+        public async Task<string> Handle(ScanBlacklistCommand request, CancellationToken cancellationToken)
         {
             foreach (var scanner in scanners)
             {

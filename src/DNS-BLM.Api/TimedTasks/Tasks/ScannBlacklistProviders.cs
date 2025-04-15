@@ -17,7 +17,7 @@ public class ScannBlacklistProviders(ILogger<ScannBlacklistProviders> logger, IS
             var domains = configuration.GetSection("DNS-BLM:Domains").Get<List<string>>();
         
             if (domains == null) throw new Exception("Domains not found");
-            await mediator.Send(new ScannBlacklistCommand(domains));
+            await mediator.Send(new ScanBlacklistCommand(domains));
         }
     }
 
