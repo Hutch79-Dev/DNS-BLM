@@ -40,16 +40,14 @@ public class VirusTotalService(IHttpClientFactory httpClientFactory, MessageServ
                     statsSuspicious = statsSection.GetProperty("suspicious").GetInt32();
                 }
 
-                if (statsMalicious > 0 || statsSuspicious > 0)
+                var scanResult = new ScanResult
                 {
-                    var hui = new ScanResult
-                    {
-                        Domain = domain,
-                        IsBlacklisted = true,
-                        ScannerName = ScannerName,
-                    };
-                    messageService.AddResult(hui);
-                }
+                    Domain = domain,
+                    IsBlacklisted = statsMalicious > 0 || statsSuspicious > 0,
+                    ScannerName = ScannerName,
+                    ScanResultUrl = $"https://www.virustotal.com/gui/domain-analysis/{analysisId}"
+                };
+                messageService.AddResult(scanResult);
             }
             catch (HttpRequestException e)
             {

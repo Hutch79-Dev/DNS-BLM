@@ -8,8 +8,8 @@ namespace DNS_BLM.Application.Commands
     {
         public List<string> Domains { get; } = domains;
     }
-    
-    public class ScannBlacklistCommandHandler(IEnumerable<IBlacklistScanner> scanners, MessageService messageService) : IRequestHandler<ScannBlacklistCommand, string>
+
+    public class ScannBlacklistCommandHandler(IEnumerable<IBlacklistScanner> scanners, MessageService messageService, INotificationService notificationService) : IRequestHandler<ScannBlacklistCommand, string>
     {
         public async Task<string> Handle(ScannBlacklistCommand request, CancellationToken cancellationToken)
         {
@@ -17,8 +17,10 @@ namespace DNS_BLM.Application.Commands
             {
                 await scanner.Scan(request.Domains);
             }
-
-            return messageService.GetResults();
+            var results = messageService.GetResults();
+            
+            await notificationService.Notify("DNS-BLM Scanning Results", results);
+            return results;
         }
     }
 }
