@@ -3,11 +3,9 @@ using MediatR;
 
 namespace DNS_BLM.Api.TimedTasks.Tasks;
 
-public class ScannBlacklistProviders : TimedHostedService
+public class ScannBlacklistProviders(ILogger<ScannBlacklistProviders> logger, IServiceProvider serviceProvider) : TimedHostedService(logger, serviceProvider)
 {
-    public ScannBlacklistProviders(ILogger<ScannBlacklistProviders> logger, IServiceProvider serviceProvider) : base(logger, serviceProvider)
-    {
-    }
+    protected override string TaskName => "ScannBlacklistProviders";
 
     protected override async Task ExecuteTimedTask(object? state = null)
     {
@@ -19,7 +17,7 @@ public class ScannBlacklistProviders : TimedHostedService
             var domains = configuration.GetSection("DNS-BLM:Domains").Get<List<string>>();
         
             if (domains == null) throw new Exception("Domains not found");
-            await mediator.Send(new ScannBlacklistCommand(domains));
+            await mediator.Send(new ScanBlacklistCommand(domains));
         }
     }
 
@@ -32,6 +30,4 @@ public class ScannBlacklistProviders : TimedHostedService
     {
         return TimeSpan.FromDays(1);
     }
-
-    protected override string TaskName { get; }
 }

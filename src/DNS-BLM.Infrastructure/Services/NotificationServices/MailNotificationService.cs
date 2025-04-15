@@ -1,9 +1,10 @@
 using System.Net;
 using System.Net.Mail;
 using System.Text;
+using DNS_BLM.Infrastructure.Services.ServiceInterfaces;
 using Microsoft.Extensions.Configuration;
 
-namespace DNS_BLM.Application.Services.NotificationServices;
+namespace DNS_BLM.Infrastructure.Services.NotificationServices;
 
 public class MailNotificationService : INotificationService, IDisposable
 {
@@ -29,23 +30,17 @@ public class MailNotificationService : INotificationService, IDisposable
         };
     }
 
-    public async Task Notify(string subject, List<string> message)
+    public async Task Notify(string subject, string message)
     {
         if (_disposed)
             throw new ObjectDisposedException(nameof(MailNotificationService));
-
-        var sb = new StringBuilder();
-        foreach (var item in message)
-        {
-            sb.AppendLine(item);
-        }
 
         var from = _configuration.GetValue<string>("DNS-BLM:Mail:From");
         using (var mailMessage = new MailMessage
                {
                    From = new MailAddress(from),
                    Subject = subject,
-                   Body = sb.ToString(),
+                   Body = message,
                    IsBodyHtml = false
                })
         {
