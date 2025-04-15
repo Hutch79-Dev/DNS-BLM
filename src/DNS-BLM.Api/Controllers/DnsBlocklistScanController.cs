@@ -24,7 +24,7 @@ public class DnsBlocklistScanController : ControllerBase
         
         if (domains == null) throw new Exception("Domains not found");
         
-        return await _mediator.Send(new ScannBlacklistCommand(domains));
+        return await _mediator.Send(new ScannBlacklistCommand(domains, false));
     }
 
     // [HttpGet("ScanCustomDomain", Name = "ScanCustomDomain")]

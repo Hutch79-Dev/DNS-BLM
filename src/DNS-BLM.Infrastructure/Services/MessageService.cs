@@ -27,6 +27,12 @@ public class MessageService
         return string.Join(Environment.NewLine, allResults);
     }
 
+    public void Clear()
+    {
+        _results = [];
+        _domains = [];
+    }
+
     private static string? ArrangeResults(List<ScanResult> results)
     {
         if (!results.Any(r => r.IsBlacklisted)) // no blacklisted domains

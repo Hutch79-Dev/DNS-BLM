@@ -10,7 +10,6 @@ public class VirusTotalService : IBlacklistScanner
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly MessageService _messageService;
     private readonly ILogger<VirusTotalService> _logger;
-    private readonly SemaphoreSlim _throttleSemaphore = new(2); // Limit concurrent requests
 
     public string ScannerName => "VirusTotal";
 
@@ -27,21 +26,9 @@ public class VirusTotalService : IBlacklistScanner
     public async Task Scan(List<string> domains, CancellationToken cancellationToken = default)
     {
         var client = _httpClientFactory.CreateClient(ScannerName);
-        var tasks = new List<Task>();
 
         foreach (var domain in domains)
         {
-            tasks.Add(ScanDomainAsync(client, domain, cancellationToken));
-        }
-
-        await Task.WhenAll(tasks);
-    }
-
-    private async Task ScanDomainAsync(HttpClient client, string domain, CancellationToken cancellationToken)
-    {
-        try
-        {
-            await _throttleSemaphore.WaitAsync(cancellationToken);
             _logger.LogDebug("Scanning domain {Domain} with {ScannerName}", domain, ScannerName);
 
             try
@@ -84,7 +71,6 @@ public class VirusTotalService : IBlacklistScanner
                     ScannerName = ScannerName,
                     ScanResultUrl = $"https://www.virustotal.com/gui/domain-analysis/{analysisId}"
                 };
-                
                 _messageService.AddResult(scanResult);
             }
             catch (HttpRequestException e)
@@ -99,10 +85,6 @@ public class VirusTotalService : IBlacklistScanner
             {
                 _logger.LogError(e, "Unexpected error while scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             }
-        }
-        finally
-        {
-            _throttleSemaphore.Release();
         }
     }
 }
