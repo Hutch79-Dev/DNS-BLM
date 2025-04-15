@@ -1,6 +1,7 @@
 using DNS_BLM.Infrastructure.Services;
 using DNS_BLM.Infrastructure.Services.ServiceInterfaces;
 using MediatR;
+using Microsoft.Extensions.Logging;
 
 namespace DNS_BLM.Application.Commands
 {
@@ -9,13 +10,22 @@ namespace DNS_BLM.Application.Commands
         public List<string> Domains { get; } = domains;
     }
 
-    public class ScannBlacklistCommandHandler(IEnumerable<IBlacklistScanner> scanners, MessageService messageService, INotificationService notificationService) : IRequestHandler<ScannBlacklistCommand, string>
+    public class ScannBlacklistCommandHandler(
+        IEnumerable<IBlacklistScanner> scanners, 
+        MessageService messageService, 
+        INotificationService notificationService,
+        ILogger<ScannBlacklistCommandHandler> logger
+        ) : IRequestHandler<ScannBlacklistCommand, string>
     {
         public async Task<string> Handle(ScannBlacklistCommand request, CancellationToken cancellationToken)
         {
             foreach (var scanner in scanners)
             {
-                await scanner.Scan(request.Domains);
+                var scannerName = scanner.ScannerName;
+                
+                logger.LogInformation($"Starting {scannerName} scan for {request.Domains.Count} domains");
+                await scanner.Scan(request.Domains, cancellationToken);
+                logger.LogInformation($"Completed {scannerName} scan for {request.Domains.Count} domains");
             }
             var results = messageService.GetResults();
             
