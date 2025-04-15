@@ -33,10 +33,10 @@ public abstract class TimedHostedService : IDisposable, IHostedService
     /// Wrapper method for executing a timed task. Logs the start and end of the task execution.
     /// </summary>
     /// <param name="state">An optional parameter that can represent state information used in the task execution.</param>
-    void ExecuteTimedTaskWrapper(object? state = null)
+    async void ExecuteTimedTaskWrapper(object? state = null)
     {
         _logger.LogInformation("Executing Timed Task: " + TaskName);
-        ExecuteTimedTask(state);
+        await ExecuteTimedTask(state);
         _logger.LogInformation("Finished Timed Task: " + TaskName);
     }
 
