@@ -26,18 +26,12 @@ public class VirusTotalService : IBlacklistScanner
     public async Task Scan(List<string> domains, CancellationToken cancellationToken = default)
     {
         var client = _httpClientFactory.CreateClient(ScannerName);
-
         foreach (var domain in domains)
         {
             _logger.LogDebug("Scanning domain {Domain} with {ScannerName}", domain, ScannerName);
-
             try
             {
-                var analysisResponse = await client.PostAsync(
-                    $"domains/{domain}/analyse", 
-                    new StringContent(""), 
-                    cancellationToken);
-                
+                using HttpResponseMessage analysisResponse = await client.PostAsync($"domains/{domain}/analyse", new StringContent(""), cancellationToken);
                 analysisResponse.EnsureSuccessStatusCode();
                 var analysisResponseBody = await analysisResponse.Content.ReadAsStringAsync(cancellationToken);
 
@@ -47,8 +41,6 @@ public class VirusTotalService : IBlacklistScanner
                     var root = doc.RootElement;
                     analysisId = root.GetProperty("data").GetProperty("id").GetString();
                 }
-
-                _logger.LogDebug("Received analysis ID {AnalysisId} for domain {Domain}", analysisId, domain);
                 
                 await Task.Delay(10000, cancellationToken);
                 
@@ -60,20 +52,17 @@ public class VirusTotalService : IBlacklistScanner
                 int statsSuspicious;
                 using (var doc = JsonDocument.Parse(responseBody))
                 {
-                    var root = doc.RootElement;
-                    var statsSection = root.GetProperty("data").GetProperty("attributes").GetProperty("stats");
-                    statsMalicious = statsSection.GetProperty("malicious").GetInt32();
-                    statsSuspicious = statsSection.GetProperty("suspicious").GetInt32();
+                    statsMalicious = doc.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("stats").GetProperty("malicious").GetInt32();
+                    statsSuspicious = doc.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("stats").GetProperty("suspicious").GetInt32();
                 }
-
-                var scanResult = new ScanResult
+                
+                _messageService.AddResult(new ScanResult
                 {
                     Domain = domain,
                     IsBlacklisted = statsMalicious > 0 || statsSuspicious > 0,
                     ScannerName = ScannerName,
                     ScanResultUrl = $"https://www.virustotal.com/gui/domain-analysis/{analysisId}"
-                };
-                _messageService.AddResult(scanResult);
+                });
             }
             catch (HttpRequestException e)
             {
