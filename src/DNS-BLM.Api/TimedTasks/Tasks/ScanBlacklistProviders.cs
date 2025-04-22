@@ -3,7 +3,7 @@ using MediatR;
 
 namespace DNS_BLM.Api.TimedTasks.Tasks;
 
-public class ScannBlacklistProviders(ILogger<ScannBlacklistProviders> logger, IServiceProvider serviceProvider) : TimedHostedService(logger, serviceProvider)
+public class ScanBlacklistProviders(ILogger<ScanBlacklistProviders> logger, IServiceProvider serviceProvider) : TimedHostedService(logger, serviceProvider)
 {
     protected override string TaskName => "ScannBlacklistProviders";
 
