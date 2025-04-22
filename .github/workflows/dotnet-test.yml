@@ -3,6 +3,9 @@
 
 name: .NET Test
 
+permissions:
+  contents: read
+
 on:
   push:
     branches: [ "main" ]
