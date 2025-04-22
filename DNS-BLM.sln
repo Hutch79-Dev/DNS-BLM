@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		compose.yaml = compose.yaml
 		.gitignore = .gitignore
 		src\DNS-BLM.Api\Dockerfile = src\DNS-BLM.Api\Dockerfile
+		Directory.Build.props = Directory.Build.props
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DNS-BLM.Domain", "src\DNS-BLM.Domain\DNS-BLM.Domain.csproj", "{9344F763-8F38-40DB-BCC2-50379B19E379}"

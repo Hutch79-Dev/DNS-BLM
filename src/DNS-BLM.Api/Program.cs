@@ -1,3 +1,5 @@
+using System.Reflection;
+using DNS_BLM.Api.Services;
 using DNS_BLM.Api.TimedTasks;
 using DNS_BLM.Application;
 using DNS_BLM.Infrastructure;
@@ -39,5 +41,8 @@ app.UseHttpsRedirection();
 app.UseAuthorization();
 
 app.MapControllers();
+
+var version = Assembly.GetEntryAssembly()!.GetSemanticVersion();
+app.Logger.LogInformation($"DNS-BLM Version: {version}");
 
 app.Run();
