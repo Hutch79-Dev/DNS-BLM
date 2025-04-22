@@ -41,5 +41,7 @@ jobs:
           context: .
           file: ./src/DNS-BLM.Api/Dockerfile
           push: true
+          cache-from: type=gha
+          cache-to: type=inline
           platforms: linux/amd64,linux/arm64
           tags: ghcr.io/${{ steps.lowercase.outputs.repo_lower }}:dev
