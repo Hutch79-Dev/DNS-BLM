@@ -1,20 +1,31 @@
 using DNS_BLM.Infrastructure.Dtos;
+using Microsoft.Extensions.Logging;
 
 namespace DNS_BLM.Infrastructure.Services;
 
-public class MessageService
+public class MessageService(ILogger<MessageService> logger)
 {
     private List<ScanResult> _results = [];
     private HashSet<string> _domains = [];
 
     public void AddResult(ScanResult result)
     {
+        ArgumentNullException.ThrowIfNull(result);
+        ArgumentNullException.ThrowIfNull(result.Domain);
+        ArgumentNullException.ThrowIfNull(result.ScannerName);
+
         _results.Add(result);
         _domains.Add(result.Domain);
     }
 
-    public string GetResults()
+    public string? GetResults()
     {
+        if (_results.Count == 0)
+        {
+            logger.LogWarning("No results available to return from MessageService");
+            return null;
+        }
+
         List<string> allResults = new List<string>();
         foreach (var domain in _domains)
         {
@@ -24,7 +35,12 @@ public class MessageService
             allResults.Add(result);
         }
 
-        return string.Join(Environment.NewLine, allResults);
+        var results = string.Join(Environment.NewLine, allResults);
+        if (String.IsNullOrWhiteSpace(results))
+            logger.LogError("No results available to return from MessageService, despite passing previous checks!");
+        ArgumentException.ThrowIfNullOrWhiteSpace(results, nameof(results));
+        
+        return results;
     }
 
     public void Clear()
@@ -35,14 +51,14 @@ public class MessageService
 
     private static string? ArrangeResults(List<ScanResult> results)
     {
-        if (!results.Any(r => r.IsBlacklisted)) // no blacklisted domains
+        if (!results.Any(r => r.IsBlacklisted)) // no blocklisted domains
             return null;
-        
+
         List<string> resultList =
         [
             results.First().Domain
         ];
-        
+
         foreach (var result in results)
         {
             if (result.IsBlacklisted)
@@ -53,7 +69,7 @@ public class MessageService
                 resultList.Add("|");
             }
         }
-        
+
         resultList.RemoveAt(resultList.Count - 1); // remove trialing |
         resultList.Add(string.Empty); // add separator between domains
         return string.Join(Environment.NewLine, resultList);
