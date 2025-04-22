@@ -9,7 +9,7 @@ Once done, you can start it using `docker compose up -d`.
 ```yaml
 services:
   dns-blm:
-    image: ghcr.io/hutch79/dns-blm:dev
+    image: ghcr.io/hutch79/dns-blm:0
     ports:
       - 7901:8080
     environment:
