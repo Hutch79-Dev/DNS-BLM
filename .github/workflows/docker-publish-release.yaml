@@ -17,7 +17,6 @@ jobs:
 
       - name: Lowercase repository name
         id: lowercase
-        # Use GITHUB_REPOSITORY variable which is owner/repo
         run: echo "repo_lower=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Login to GitHub Container Registry
@@ -54,11 +53,12 @@ jobs:
           echo "$tags"
 
       - name: Build and push Docker image
-        uses: docker/build-push-action@v6 # Use latest version
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./src/DNS-BLM.Api/Dockerfile
           push: true
+          cache-from: type=gha
+          cache-to: type=inline
           platforms: linux/amd64,linux/arm64
-          # Use the output from the semver_tags step
           tags: ${{ steps.semver_tags.outputs.tags }}
