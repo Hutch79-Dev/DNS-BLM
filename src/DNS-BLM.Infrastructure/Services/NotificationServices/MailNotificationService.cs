@@ -22,7 +22,7 @@ public class MailNotificationService : INotificationService, IDisposable
         var password = _configuration.GetValue<string>("DNS-BLM:Mail:Password");
         var enableSsl = _configuration.GetValue<bool>("DNS-BLM:Mail:EnableSsl");
         
-        if (port <= 0) throw new ArgumentException("Port must be greater than 0", nameof(port));
+        if (port <= 0) throw new ArgumentOutOfRangeException(nameof(port), "Port must be greater than 0");
         if (string.IsNullOrWhiteSpace(host)) throw new ArgumentException("Host must not be empty", nameof(host));
         if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Username must not be empty", nameof(username));
         if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Password must not be empty", nameof(password));
