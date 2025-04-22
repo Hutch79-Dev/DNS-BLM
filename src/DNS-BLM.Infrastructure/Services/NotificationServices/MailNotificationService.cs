@@ -22,6 +22,11 @@ public class MailNotificationService : INotificationService, IDisposable
         var password = _configuration.GetValue<string>("DNS-BLM:Mail:Password");
         var enableSsl = _configuration.GetValue<bool>("DNS-BLM:Mail:EnableSsl");
         
+        if (port <= 0) throw new ArgumentException("Port must be greater than 0", nameof(port));
+        if (string.IsNullOrWhiteSpace(host)) throw new ArgumentException("Host must not be empty", nameof(host));
+        if (string.IsNullOrWhiteSpace(username)) throw new ArgumentException("Username must not be empty", nameof(username));
+        if (string.IsNullOrWhiteSpace(password)) throw new ArgumentException("Password must not be empty", nameof(password));
+
         _smtpClient = new SmtpClient(host)
         {
             Port = port,
@@ -32,9 +37,9 @@ public class MailNotificationService : INotificationService, IDisposable
 
     public async Task Notify(string subject, string message)
     {
-        if (_disposed)
-            throw new ObjectDisposedException(nameof(MailNotificationService));
-
+        ObjectDisposedException.ThrowIf(_disposed, nameof(MailNotificationService));
+        ArgumentException.ThrowIfNullOrWhiteSpace(message, nameof(message));
+        
         var from = _configuration.GetValue<string>("DNS-BLM:Mail:From");
         using (var mailMessage = new MailMessage
                {
@@ -45,6 +50,7 @@ public class MailNotificationService : INotificationService, IDisposable
                })
         {
             var reportReceiver = _configuration.GetValue<string>("DNS-BLM:ReportReceiver");
+            ArgumentException.ThrowIfNullOrWhiteSpace(reportReceiver, nameof(reportReceiver));
             mailMessage.To.Add(reportReceiver);
             await _smtpClient!.SendMailAsync(mailMessage);
         }
