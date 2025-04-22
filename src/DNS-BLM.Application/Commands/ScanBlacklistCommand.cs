@@ -24,9 +24,9 @@ namespace DNS_BLM.Application.Commands
             {
                 var scannerName = scanner.ScannerName;
                 
-                logger.LogInformation($"Starting {scannerName} scan for {request.Domains.Count} domains");
+                logger.LogInformation("Starting {ScannerName} scan for {DomainsCount} domains", scannerName, request.Domains.Count);
                 await scanner.Scan(request.Domains, cancellationToken);
-                logger.LogInformation($"Completed {scannerName} scan for {request.Domains.Count} domains");
+                logger.LogInformation("Completed {ScannerName} scan for {DomainsCount} domains", scannerName, request.Domains.Count);
             }
             var results = messageService.GetResults();
             messageService.Clear();

@@ -7,6 +7,6 @@ public static class TimedTaskRegistry
 {
     public static void AddTimedTaskModules(this IServiceCollection services)
     {
-        services.AddHostedService<ScannBlacklistProviders>();
+        services.AddHostedService<ScanBlacklistProviders>();
     }
 }
