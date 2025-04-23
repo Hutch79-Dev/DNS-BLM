@@ -1,7 +1,5 @@
 name: Build and Push Docker Image
 
-runs-on: self-hosted
-
 on:
   push:
     branches:
@@ -15,7 +13,7 @@ permissions:
 
 jobs:
   docker:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
