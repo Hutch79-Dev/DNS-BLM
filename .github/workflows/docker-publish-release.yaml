@@ -1,5 +1,7 @@
 name: Build and Push Docker Image on Release
 
+runs-on: self-hosted
+
 on:
   release:
     types: [published]
