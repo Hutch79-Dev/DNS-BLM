@@ -11,11 +11,13 @@ public class MessageService(ILogger<MessageService> logger)
     public void AddResult(ScanResult result)
     {
         ArgumentNullException.ThrowIfNull(result);
-        ArgumentNullException.ThrowIfNull(result.Domain);
-        ArgumentNullException.ThrowIfNull(result.ScannerName);
+        ArgumentException.ThrowIfNullOrWhiteSpace(result.Domain);
+        ArgumentException.ThrowIfNullOrWhiteSpace(result.ScannerName);
 
         _results.Add(result);
         _domains.Add(result.Domain);
+        
+        logger.LogDebug("Added result for {Domain} from {ScannerName}", result.Domain, result.ScannerName);
     }
 
     public string? GetResults()
@@ -37,7 +39,7 @@ public class MessageService(ILogger<MessageService> logger)
 
         var results = string.Join(Environment.NewLine, allResults);
         if (String.IsNullOrWhiteSpace(results))
-            logger.LogError("No results available to return from MessageService, despite passing previous checks!");
+            logger.LogError("No results available to return, despite passing previous checks!");
         ArgumentException.ThrowIfNullOrWhiteSpace(results, nameof(results));
         
         return results;
