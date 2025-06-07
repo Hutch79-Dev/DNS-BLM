@@ -31,12 +31,14 @@ namespace DNS_BLM.Application.Commands
             var results = messageService.GetResults();
             messageService.Clear();
 
-            if (request.SendMail)
+            if (request.SendMail && results is not null)
             {
                 await notificationService.Notify("DNS-BLM Scanning Results", results);
             }
             else
             {
+                if (results is null)
+                    results = "No blacklisted Domains.";
                 logger.LogInformation("Mail notification skipped as per request");
             }
             

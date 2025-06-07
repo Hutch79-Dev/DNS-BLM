@@ -5,7 +5,7 @@ namespace DNS_BLM.Api.TimedTasks.Tasks;
 
 public class ScanBlacklistProviders(ILogger<ScanBlacklistProviders> logger, IServiceProvider serviceProvider) : TimedHostedService(logger, serviceProvider)
 {
-    protected override string TaskName => "ScannBlacklistProviders";
+    protected override string TaskName => "ScanBlacklistProviders";
 
     protected override async Task ExecuteTimedTask(object? state = null)
     {
@@ -17,15 +17,5 @@ public class ScanBlacklistProviders(ILogger<ScanBlacklistProviders> logger, ISer
         
         if (domains == null) throw new Exception("Domains not found");
         await mediator.Send(new ScanBlacklistCommand(domains));
-    }
-
-    protected override TimeSpan GetExecutionTime()
-    {
-        return new TimeSpan(21, 26, 0);
-    }
-
-    protected override TimeSpan GetInterval()
-    {
-        return TimeSpan.FromDays(1);
     }
 }
