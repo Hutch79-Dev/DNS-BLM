@@ -30,9 +30,15 @@ namespace DNS_BLM.Application.Commands
             }
             var results = messageService.GetResults();
             messageService.Clear();
-            
-            if (!request.SendMail)
+
+            if (request.SendMail)
+            {
                 await notificationService.Notify("DNS-BLM Scanning Results", results);
+            }
+            else
+            {
+                logger.LogInformation("Mail notification skipped as per request");
+            }
             
             return results;
         }

@@ -22,10 +22,15 @@ public class MessageService(ILogger<MessageService> logger)
 
     public string? GetResults()
     {
-        if (_results.Any(r => r.IsBlacklisted))
+        if (!_results.Any(r => r.IsBlacklisted))
         {
             logger.LogWarning("No results available to return from MessageService");
             return null;
+        }
+        logger.LogDebug("There are {ResultsCount} results: ", _results.Count);
+        foreach (var result in _results)
+        {
+            logger.LogDebug($"{result.Domain}: {result.ScannerName} - {result.IsBlacklisted}");
         }
 
         List<string> allResults = new List<string>();

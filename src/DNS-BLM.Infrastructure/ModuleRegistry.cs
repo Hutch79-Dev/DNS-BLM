@@ -13,7 +13,7 @@ public static class ModuleRegistry
     public static void AddInfrastructureModule(this IServiceCollection services, IConfiguration configuration)
     {
         services.AddSingleton<INotificationService, MailNotificationService>();
-        services.AddTransient<MessageService>();
+        services.AddSingleton<MessageService>();
 
         string? virusTotalApiKey = configuration["DNS-BLM:API_Credentials:VirusTotal"];
         if (virusTotalApiKey != null)
