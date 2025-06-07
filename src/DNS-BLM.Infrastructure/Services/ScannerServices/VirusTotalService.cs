@@ -28,7 +28,7 @@ public class VirusTotalService : IBlacklistScanner
         var client = _httpClientFactory.CreateClient(ScannerName);
         foreach (var domain in domains)
         {
-            _logger.LogDebug("Scanning domain {Domain} with {ScannerName}", domain, ScannerName);
+            _logger.LogInformation("Scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             try
             {
                 using HttpResponseMessage analysisResponse = await client.PostAsync($"domains/{domain}/analyse", new StringContent(""), cancellationToken);
@@ -41,6 +41,8 @@ public class VirusTotalService : IBlacklistScanner
                     var root = doc.RootElement;
                     analysisId = root.GetProperty("data").GetProperty("id").GetString();
                 }
+
+                _logger.LogDebug("Received analysis ID {AnalysisId} for domain {Domain}", analysisId, domain);
                 
                 await Task.Delay(10000, cancellationToken);
                 
@@ -55,14 +57,19 @@ public class VirusTotalService : IBlacklistScanner
                     statsMalicious = doc.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("stats").GetProperty("malicious").GetInt32();
                     statsSuspicious = doc.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("stats").GetProperty("suspicious").GetInt32();
                 }
-                
-                _messageService.AddResult(new ScanResult
+
+                var scanResult = new ScanResult
                 {
                     Domain = domain,
                     IsBlacklisted = statsMalicious > 0 || statsSuspicious > 0,
                     ScannerName = ScannerName,
                     ScanResultUrl = $"https://www.virustotal.com/gui/domain-analysis/{analysisId}"
-                });
+                };
+
+                if (scanResult.IsBlacklisted)
+                    _logger.LogInformation("Domain \"{Domain}\" is listed on {ScannerName}", domain, ScannerName);
+                
+                _messageService.AddResult(scanResult);
             }
             catch (HttpRequestException e)
             {
