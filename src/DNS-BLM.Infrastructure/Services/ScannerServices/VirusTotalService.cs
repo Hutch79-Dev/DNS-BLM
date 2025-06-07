@@ -44,7 +44,7 @@ public class VirusTotalService : IBlacklistScanner
 
                 _logger.LogDebug("Received analysis ID {AnalysisId} for domain {Domain}", analysisId, domain);
                 
-                await Task.Delay(10000, cancellationToken);
+                await Task.Delay(30000, cancellationToken);
                 
                 var response = await client.GetAsync($"analyses/{analysisId}", cancellationToken);
                 response.EnsureSuccessStatusCode();
