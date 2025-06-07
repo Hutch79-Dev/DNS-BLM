@@ -21,7 +21,7 @@ public class ScanBlacklistProviders(ILogger<ScanBlacklistProviders> logger, ISer
 
     protected override TimeSpan GetExecutionTime()
     {
-        return new TimeSpan(2, 0, 0);
+        return new TimeSpan(21, 26, 0);
     }
 
     protected override TimeSpan GetInterval()
