@@ -39,14 +39,15 @@ public abstract class TimedHostedService : IDisposable, IHostedService
     {
         if (_expression == null) return;
 
-        var next = _expression.GetNextOccurrence(DateTime.Now);
-        if (next.HasValue)
+        var nextUtc = _expression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local);
+        if (nextUtc.HasValue)
         {
-            var delay = next.Value - DateTime.Now;
+            var nextLocal = TimeZoneInfo.ConvertTimeFromUtc(nextUtc.Value, TimeZoneInfo.Local);
+            var delay = nextLocal - DateTime.Now;
             _timer?.Dispose();
             _timer = new Timer(ExecuteTimedTaskWrapper, null, delay, Timeout.InfiniteTimeSpan);
             _logger.LogInformation("Next scheduled execution for {TaskName} at {NextExecution} (in {Delay})", 
-                TaskName, next.Value, delay);
+                TaskName, nextLocal, delay);
         }
     }
 
