@@ -14,7 +14,7 @@ public class VirusTotalService : IBlacklistScanner
     public string ScannerName => "VirusTotal";
 
     public VirusTotalService(
-        IHttpClientFactory httpClientFactory, 
+        IHttpClientFactory httpClientFactory,
         MessageService messageService,
         ILogger<VirusTotalService> logger)
     {
@@ -31,7 +31,11 @@ public class VirusTotalService : IBlacklistScanner
             _logger.LogInformation("Scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             try
             {
-                using HttpResponseMessage analysisResponse = await client.PostAsync($"domains/{domain}/analyse", new StringContent(""), cancellationToken);
+                using HttpResponseMessage analysisResponse = await client.PostAsync(
+                    $"domains/{domain}/analyse", 
+                    new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"),
+                    cancellationToken
+                );
                 analysisResponse.EnsureSuccessStatusCode();
                 var analysisResponseBody = await analysisResponse.Content.ReadAsStringAsync(cancellationToken);
 
@@ -43,33 +47,9 @@ public class VirusTotalService : IBlacklistScanner
                 }
 
                 _logger.LogDebug("Received analysis ID {AnalysisId} for domain {Domain}", analysisId, domain);
-                
-                await Task.Delay(30000, cancellationToken);
-                
-                var response = await client.GetAsync($"analyses/{analysisId}", cancellationToken);
-                response.EnsureSuccessStatusCode();
-                var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
 
-                int statsMalicious;
-                int statsSuspicious;
-                using (var doc = JsonDocument.Parse(responseBody))
-                {
-                    statsMalicious = doc.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("stats").GetProperty("malicious").GetInt32();
-                    statsSuspicious = doc.RootElement.GetProperty("data").GetProperty("attributes").GetProperty("stats").GetProperty("suspicious").GetInt32();
-                }
-
-                var scanResult = new ScanResult
-                {
-                    Domain = domain,
-                    IsBlacklisted = statsMalicious > 0 || statsSuspicious > 0,
-                    ScannerName = ScannerName,
-                    ScanResultUrl = $"https://www.virustotal.com/gui/domain-analysis/{analysisId}"
-                };
-
-                if (scanResult.IsBlacklisted)
-                    _logger.LogInformation("Domain \"{Domain}\" is listed on {ScannerName}", domain, ScannerName);
-                
-                _messageService.AddResult(scanResult);
+                await Task.Delay(1000, cancellationToken);
+                await Analyze(analysisId, domain, client, cancellationToken);
             }
             catch (HttpRequestException e)
             {
@@ -84,5 +64,83 @@ public class VirusTotalService : IBlacklistScanner
                 _logger.LogError(e, "Unexpected error while scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             }
         }
+    }
+
+    private async Task Analyze(string? analysisId, string domain, HttpClient client, CancellationToken cancellationToken = default)
+    {
+        if (string.IsNullOrWhiteSpace(analysisId))
+        {
+            _logger.LogError("The analysis ID for Domain {Domain} must not be null!", domain);
+            return;
+        }
+
+        string status = string.Empty;
+        int statsMalicious = 0;
+        int statsSuspicious = 0;
+        int maxAttempts = 7;
+
+        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        {
+            var response = await client.GetAsync($"analyses/{analysisId}", cancellationToken);
+            response.EnsureSuccessStatusCode();
+            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+
+            using var doc = JsonDocument.Parse(responseBody);
+            var attributes = doc.RootElement.GetProperty("data").GetProperty("attributes");
+            status = attributes.GetProperty("status").GetString();
+
+            if (status == "completed" || status == "failed")
+            {
+                if (status == "failed")
+                {
+                    _logger.LogError("The analysis for Domain {Domain} has failed", domain);
+                    return;
+                }
+
+                var stats = attributes.GetProperty("stats");
+                statsMalicious = stats.GetProperty("malicious").GetInt32();
+                statsSuspicious = stats.GetProperty("suspicious").GetInt32();
+                var delay = CalculateBackoffTime(attempt);
+                _logger.LogDebug("The analysis for Domain {Domain} has succeeded after {attempt}/{maxAttempts} ({delay} sec.) attempts.", domain, attempt, maxAttempts, delay);
+                break;
+            }
+
+            if (attempt == maxAttempts)
+                throw new Exception($"Maximum retries ({attempt}) reached while analyzing domain {domain}");
+
+            // Exponential backoff with cancellation support
+            cancellationToken.ThrowIfCancellationRequested();
+            await Task.Delay(attempt * attempt * 1000, cancellationToken);
+        }
+
+        var scanResult = new ScanResult
+        {
+            Domain = domain,
+            IsBlacklisted = statsMalicious > 0 || statsSuspicious > 0,
+            ScannerName = ScannerName,
+            ScanResultUrl = $"https://www.virustotal.com/gui/domain-analysis/{analysisId}"
+        };
+
+        if (scanResult.IsBlacklisted)
+        {
+            _logger.LogInformation("Domain \"{Domain}\" is listed on {ScannerName} - Status: {status}",
+                domain, ScannerName, status);
+        }
+
+        _messageService.AddResult(scanResult);
+    }
+    
+    private static double CalculateBackoffTime(int numberOfAttempts)
+    {
+        double totalMilliseconds = 0;
+    
+        for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
+        {
+            // Each attempt adds attempt² seconds of delay
+            totalMilliseconds += attempt * attempt * 1000;
+        }
+    
+        // Convert to seconds
+        return totalMilliseconds / 1000;
     }
 }
