@@ -1,9 +1,12 @@
-﻿namespace DNS_BLM.Api.TimedTasks;
+﻿using Cronos;
+
+namespace DNS_BLM.Api.TimedTasks;
 
 public abstract class TimedHostedService : IDisposable, IHostedService
 {
     private protected readonly ILogger _logger;
-    private Timer _timer;
+    private Timer? _timer;
+    private CronExpression? _expression;
     private protected readonly IServiceProvider _serviceProvider;
 
     protected TimedHostedService(ILogger logger, IServiceProvider serviceProvider)
@@ -16,18 +19,37 @@ public abstract class TimedHostedService : IDisposable, IHostedService
     {
         _logger.LogInformation($"Timed Hosted Service ({TaskName}) running.");
 
-        var now = DateTime.UtcNow;
-        DateTime nextExecutionTime = DateTime.UtcNow.Date.Add(GetExecutionTime());
-        if (now > nextExecutionTime)
+        using var scope = _serviceProvider.CreateScope();
+        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+        var cronExpression = configuration.GetValue<string>($"DNS-BLM:TimedTasks:{TaskName}");
+        
+        if (string.IsNullOrWhiteSpace(cronExpression))
         {
-            nextExecutionTime = nextExecutionTime.AddDays(1);
+            throw new Exception($"Cron expression for task {TaskName} not found in configuration. Please set DNS-BLM:TimedTasks:{TaskName} environment variable or configuration.");
         }
 
-        var dueTime = nextExecutionTime - now;
-        _timer = new Timer(ExecuteTimedTaskWrapper, null, dueTime, GetInterval());
+        _logger.LogInformation("Using cron schedule: {CronExpression} for task {TaskName}", cronExpression, TaskName);
+        _expression = CronExpression.Parse(cronExpression);
+        ScheduleNext();
+        
         return Task.CompletedTask;
     }
 
+    private void ScheduleNext()
+    {
+        if (_expression == null) return;
+
+        var nextUtc = _expression.GetNextOccurrence(DateTime.UtcNow, TimeZoneInfo.Local);
+        if (nextUtc.HasValue)
+        {
+            var nextLocal = TimeZoneInfo.ConvertTimeFromUtc(nextUtc.Value, TimeZoneInfo.Local);
+            var delay = nextLocal - DateTime.Now;
+            _timer?.Dispose();
+            _timer = new Timer(ExecuteTimedTaskWrapper, null, delay, Timeout.InfiniteTimeSpan);
+            _logger.LogInformation("Next scheduled execution for {TaskName} at {NextExecution} (in {Delay})", 
+                TaskName, nextLocal, delay);
+        }
+    }
 
     /// <summary>
     /// Wrapper method for executing a timed task. Logs the start and end of the task execution.
@@ -35,27 +57,23 @@ public abstract class TimedHostedService : IDisposable, IHostedService
     /// <param name="state">An optional parameter that can represent state information used in the task execution.</param>
     async void ExecuteTimedTaskWrapper(object? state = null)
     {
-        _logger.LogInformation("Executing Timed Task: " + TaskName);
-        await ExecuteTimedTask(state);
-        _logger.LogInformation("Finished Timed Task: " + TaskName);
+        try
+        {
+            _logger.LogInformation("Executing Timed Task: " + TaskName);
+            await ExecuteTimedTask(state);
+            _logger.LogInformation("Finished Timed Task: " + TaskName);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error occurred while executing timed task {TaskName}", TaskName);
+        }
+        finally
+        {
+            ScheduleNext();
+        }
     }
 
     protected abstract Task ExecuteTimedTask(object? state = null);
-
-    /// <summary>
-    /// Time when to execute a scheduled Task in UTC.
-    /// e.g. TimeSpan(2, 0, 0) meaning 2AM.
-    /// </summary>
-    /// <returns></returns>
-    protected abstract TimeSpan GetExecutionTime();
-
-    /// <summary>
-    /// Interval for executing scheduled Task.
-    /// e.g. TimeSpan.FromDays(1) meaning once a day.
-    /// </summary>
-    /// <returns></returns>
-    protected abstract TimeSpan GetInterval();
-
     protected abstract string TaskName { get; }
 
     public Task StopAsync(CancellationToken cancellationToken)
@@ -68,5 +86,6 @@ public abstract class TimedHostedService : IDisposable, IHostedService
     public void Dispose()
     {
         _timer?.Dispose();
+        GC.SuppressFinalize(this);
     }
 }

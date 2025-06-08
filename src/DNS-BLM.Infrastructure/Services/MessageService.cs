@@ -17,15 +17,20 @@ public class MessageService(ILogger<MessageService> logger)
         _results.Add(result);
         _domains.Add(result.Domain);
         
-        logger.LogDebug("Added result for {Domain} from {ScannerName}", result.Domain, result.ScannerName);
+        logger.LogDebug("Added result for {Domain} from {ScannerName} - Blacklisted: {IsBlacklisted}", result.Domain, result.ScannerName, result.IsBlacklisted);
     }
 
     public string? GetResults()
     {
-        if (_results.Count == 0)
+        if (!_results.Any(r => r.IsBlacklisted))
         {
             logger.LogWarning("No results available to return from MessageService");
             return null;
+        }
+        logger.LogDebug("There are {ResultsCount} results: ", _results.Count);
+        foreach (var result in _results)
+        {
+            logger.LogDebug($"{result.Domain}: {result.ScannerName} - {result.IsBlacklisted}");
         }
 
         List<string> allResults = new List<string>();
