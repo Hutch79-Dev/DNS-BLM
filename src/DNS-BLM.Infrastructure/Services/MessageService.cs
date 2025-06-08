@@ -27,6 +27,11 @@ public class MessageService(ILogger<MessageService> logger)
             logger.LogDebug("No blacklisted results available to return from MessageService");
             return null;
         }
+        logger.LogDebug("There are {ResultsCount} results: ", _results.Count);
+        foreach (var result in _results)
+        {
+            logger.LogDebug($"{result.Domain}: {result.ScannerName} - {result.IsBlacklisted}");
+        }
 
         logger.LogDebug("There are {ResultsCount} results: ", _results.Count);
         foreach (var result in _results)
