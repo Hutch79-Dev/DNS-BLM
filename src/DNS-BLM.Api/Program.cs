@@ -18,7 +18,7 @@ if (builder.Configuration.GetSection("DNS-BLM:Sentry").Exists())
     });
 }
 
-if (builder.Environment.IsDevelopment() || builder.Configuration.GetSection("DNS-BLM").GetValue<bool>("Debug"))
+if (builder.Configuration.GetSection("DNS-BLM").GetValue<bool>("Debug"))
     builder.Logging.AddFilter("DNS_BLM", LogLevel.Debug);
 
 builder.Services.AddControllers();
