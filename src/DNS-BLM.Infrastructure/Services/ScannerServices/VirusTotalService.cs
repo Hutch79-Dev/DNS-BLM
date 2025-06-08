@@ -77,9 +77,9 @@ public class VirusTotalService : IBlacklistScanner
         string status = string.Empty;
         int statsMalicious = 0;
         int statsSuspicious = 0;
-        int maxAttempts = 5;
+        int maxAttempts = 3;
 
-        for (int attempt = 1; attempt <= maxAttempts; attempt++)
+        for (int attempt = 0; attempt <= maxAttempts; attempt++)
         {
             var response = await client.GetAsync($"analyses/{analysisId}", cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -143,7 +143,7 @@ public class VirusTotalService : IBlacklistScanner
     /// <returns></returns>
     private static int CalculateBackoffTime(int numberOfAttempts)
     {
-        numberOfAttempts += 2; // Increase attempts to skip 1 and 5 second delays
+        numberOfAttempts += 3; // Increase attempts to skip 1 and 5 second delays
         double totalMilliseconds = 0;
 
         for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
