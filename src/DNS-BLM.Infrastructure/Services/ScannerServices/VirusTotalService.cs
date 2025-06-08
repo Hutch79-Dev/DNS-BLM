@@ -103,7 +103,7 @@ public class VirusTotalService : IBlacklistScanner
             }
 
             if (attempt == maxAttempts)
-                throw new Exception($"Maximum retries ({attempt}) reached while analyzing domain {domain}");
+                _logger.LogError("Maximum retries ({Attempt}) reached while analyzing domain {Domain}", attempt, domain);
 
             // Exponential backoff with cancellation support
             cancellationToken.ThrowIfCancellationRequested();
