@@ -24,9 +24,10 @@ public class MessageService(ILogger<MessageService> logger)
     {
         if (!_results.Any(r => r.IsBlacklisted))
         {
-            logger.LogWarning("No results available to return from MessageService");
+            logger.LogDebug("No blacklisted results available to return from MessageService");
             return null;
         }
+
         logger.LogDebug("There are {ResultsCount} results: ", _results.Count);
         foreach (var result in _results)
         {
@@ -36,7 +37,7 @@ public class MessageService(ILogger<MessageService> logger)
         List<string> allResults = new List<string>();
         foreach (var domain in _domains)
         {
-            var domainResults = _results.Where(r => r.Domain == domain).ToList();
+            var domainResults = _results.Where(r => r.Domain == domain && r.IsBlacklisted).ToArray();
             var result = ArrangeResults(domainResults);
             if (result == null) continue;
             allResults.Add(result);
@@ -56,7 +57,7 @@ public class MessageService(ILogger<MessageService> logger)
         _domains = [];
     }
 
-    private static string? ArrangeResults(List<ScanResult> results)
+    private static string? ArrangeResults(ScanResult[] results)
     {
         if (!results.Any(r => r.IsBlacklisted)) // no blocklisted domains
             return null;

@@ -33,7 +33,7 @@ public class VirusTotalService : IBlacklistScanner
             {
                 using HttpResponseMessage analysisResponse = await client.PostAsync(
                     $"domains/{domain}/analyse",
-                    new StringContent(string.Empty, System.Text.Encoding.UTF8, "application/json"),
+                    new StringContent(string.Empty),
                     cancellationToken
                 );
                 analysisResponse.EnsureSuccessStatusCode();
@@ -77,7 +77,7 @@ public class VirusTotalService : IBlacklistScanner
         string status = string.Empty;
         int statsMalicious = 0;
         int statsSuspicious = 0;
-        int maxAttempts = 7;
+        int maxAttempts = 5;
 
         for (int attempt = 1; attempt <= maxAttempts; attempt++)
         {
@@ -89,25 +89,31 @@ public class VirusTotalService : IBlacklistScanner
             var attributes = doc.RootElement.GetProperty("data").GetProperty("attributes");
             status = attributes.GetProperty("status").GetString();
 
-            switch (status)
+            if (status == "failed")
             {
-                case "failed":
-                    _logger.LogError("The analysis for Domain {Domain} has failed", domain);
-                    return;
-
-                case "completed":
-                    statsMalicious = attributes.GetProperty("stats").GetProperty("malicious").GetInt32();
-                    statsSuspicious = attributes.GetProperty("stats").GetProperty("suspicious").GetInt32();
-                    _logger.LogDebug("The analysis for Domain {Domain} has succeeded after {attempt}/{maxAttempts} ({delay} sec.) attempts.", domain, attempt, maxAttempts, CalculateBackoffTime(attempt));
-                    break;
+                _logger.LogError("The analysis for Domain {Domain} has failed", domain);
+                return;
             }
 
-            if (attempt == maxAttempts)
-                _logger.LogError("Maximum retries ({Attempt}) reached while analyzing domain {Domain}", attempt, domain);
-
+            if (status == "completed")
+            {
+                statsMalicious = attributes.GetProperty("stats").GetProperty("malicious").GetInt32();
+                statsSuspicious = attributes.GetProperty("stats").GetProperty("suspicious").GetInt32();
+                _logger.LogDebug("The analysis for Domain {Domain} has succeeded after {attempt}/{maxAttempts} attempts.", domain, attempt, maxAttempts);
+                break;
+            }
+            
             // Exponential backoff with cancellation support
             cancellationToken.ThrowIfCancellationRequested();
-            await Task.Delay(attempt * attempt * 1000, cancellationToken);
+            var delay = CalculateBackoffTime(attempt);
+            _logger.LogDebug("No valide result for domain {Domain}. Wait for {delay} seconds before retrying.", domain, delay);
+            await Task.Delay(delay * 1000, cancellationToken);
+        }
+
+        if (status != "completed")
+        {
+            _logger.LogError("Maximum retries ({maxAttempts}) reached while analyzing domain {Domain}", maxAttempts, domain);
+            return;
         }
 
         var scanResult = new ScanResult
@@ -119,13 +125,25 @@ public class VirusTotalService : IBlacklistScanner
         };
 
         if (scanResult.IsBlacklisted)
-            _logger.LogInformation("Domain \"{Domain}\" is listed on {ScannerName} - Status: {status}", domain, ScannerName, status);
+        {
+            _logger.LogInformation("Domain \"{Domain}\" is listed on {ScannerName}", domain, ScannerName);
+        }
+        else
+        {
+            _logger.LogInformation("Domain \"{Domain}\" is not listed on {ScannerName}", domain, ScannerName);
+        }
 
         _messageService.AddResult(scanResult);
     }
 
-    private static double CalculateBackoffTime(int numberOfAttempts)
+    /// <summary>
+    /// Returns the delay for a given retry in seconds
+    /// </summary>
+    /// <param name="numberOfAttempts"></param>
+    /// <returns></returns>
+    private static int CalculateBackoffTime(int numberOfAttempts)
     {
+        numberOfAttempts += 2; // Increase attempts to skip 1 and 5 second delays
         double totalMilliseconds = 0;
 
         for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
@@ -133,6 +151,7 @@ public class VirusTotalService : IBlacklistScanner
             // Each attempt adds attempt² seconds of delay
             totalMilliseconds += attempt * attempt * 1000;
         }
-        return totalMilliseconds / 1000;
+
+        return (int)(totalMilliseconds / 1000);
     }
 }
