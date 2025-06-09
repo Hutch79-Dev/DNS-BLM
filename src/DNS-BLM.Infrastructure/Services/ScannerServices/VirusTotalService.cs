@@ -31,13 +31,29 @@ public class VirusTotalService : IBlacklistScanner
             _logger.LogInformation("Scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             try
             {
-                using HttpResponseMessage analysisResponse = await client.PostAsync(
-                    $"domains/{domain}/analyse",
-                    new StringContent(string.Empty),
-                    cancellationToken
-                );
-                analysisResponse.EnsureSuccessStatusCode();
-                var analysisResponseBody = await analysisResponse.Content.ReadAsStringAsync(cancellationToken);
+                int maxRetries = 3;
+                int currentRetry = 0;
+                string analysisResponseBody = null;
+
+                while (currentRetry <= maxRetries)
+                {
+                    try
+                    {
+                        using HttpResponseMessage analysisResponse = await client.PostAsync($"domains/{domain}/analyse", new StringContent(string.Empty), cancellationToken);
+                        analysisResponse.EnsureSuccessStatusCode();
+                        analysisResponseBody = await analysisResponse.Content.ReadAsStringAsync(cancellationToken);
+                        break;
+                    }
+                    catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException)
+                    {
+                        currentRetry++;
+                        if (currentRetry > maxRetries)
+                            throw;
+        
+                        int delay = 1000 * (int)Math.Pow(2, currentRetry - 1);
+                        await Task.Delay(delay, cancellationToken);
+                    }
+                }
 
                 string? analysisId;
                 using (var doc = JsonDocument.Parse(analysisResponseBody))
@@ -48,7 +64,7 @@ public class VirusTotalService : IBlacklistScanner
 
                 _logger.LogDebug("Received analysis ID {AnalysisId} for domain {Domain}", analysisId, domain);
 
-                await Task.Delay(1000, cancellationToken);
+                await Task.Delay(5000, cancellationToken);
                 await Analyze(analysisId, domain, client, cancellationToken);
             }
             catch (HttpRequestException e)
