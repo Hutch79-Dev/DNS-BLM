@@ -1,4 +1,5 @@
 ﻿using Cronos;
+using Microsoft.Extensions.Options;
 
 namespace DNS_BLM.Api.TimedTasks;
 
@@ -7,22 +8,33 @@ public abstract class TimedHostedService : IDisposable, IHostedService
     private protected readonly ILogger _logger;
     private Timer? _timer;
     private CronExpression? _expression;
-    private protected readonly IServiceProvider _serviceProvider;
+    private readonly IOptions<AppConfiguration> _appConfiguration;
 
-    protected TimedHostedService(ILogger logger, IServiceProvider serviceProvider)
+    protected TimedHostedService(ILogger logger, IOptions<AppConfiguration> appConfiguration)
     {
         _logger = logger;
-        _serviceProvider = serviceProvider;
+        _appConfiguration = appConfiguration;
     }
 
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _logger.LogInformation($"Timed Hosted Service ({TaskName}) running.");
-
-        using var scope = _serviceProvider.CreateScope();
-        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-        var cronExpression = configuration.GetValue<string>($"DNS-BLM:TimedTasks:{TaskName}");
         
+        var timedTasks = _appConfiguration.Value.TimedTasks;
+        string cronExpression = string.Empty;
+        var propertyInfo = timedTasks.GetType().GetProperty(TaskName);
+        if (propertyInfo != null)
+        {
+            var taskSchedule = propertyInfo.GetValue(timedTasks);
+            cronExpression = taskSchedule?.ToString() ?? string.Empty;
+        }
+        else
+        {
+            _logger.LogError($"Property '{TaskName}' not found in TimedTasks.");
+        }
+
+        ArgumentException.ThrowIfNullOrWhiteSpace(cronExpression);
+
         if (string.IsNullOrWhiteSpace(cronExpression))
         {
             throw new Exception($"Cron expression for task {TaskName} not found in configuration. Please set DNS-BLM:TimedTasks:{TaskName} environment variable or configuration.");
@@ -31,7 +43,7 @@ public abstract class TimedHostedService : IDisposable, IHostedService
         _logger.LogInformation("Using cron schedule: {CronExpression} for task {TaskName}", cronExpression, TaskName);
         _expression = CronExpression.Parse(cronExpression);
         ScheduleNext();
-        
+
         return Task.CompletedTask;
     }
 
@@ -46,7 +58,7 @@ public abstract class TimedHostedService : IDisposable, IHostedService
             var delay = nextLocal - DateTime.Now;
             _timer?.Dispose();
             _timer = new Timer(ExecuteTimedTaskWrapper, null, delay, Timeout.InfiniteTimeSpan);
-            _logger.LogInformation("Next scheduled execution for {TaskName} at {NextExecution} (in {Delay})", 
+            _logger.LogInformation("Next scheduled execution for {TaskName} at {NextExecution} (in {Delay})",
                 TaskName, nextLocal, delay);
         }
     }

@@ -1,21 +1,15 @@
 using DNS_BLM.Application.Commands;
 using MediatR;
+using Microsoft.Extensions.Options;
 
 namespace DNS_BLM.Api.TimedTasks.Tasks;
 
-public class ScanBlacklistProviders(ILogger<ScanBlacklistProviders> logger, IServiceProvider serviceProvider) : TimedHostedService(logger, serviceProvider)
+public class ScanBlacklistProviders(ILogger<ScanBlacklistProviders> logger, IMediator mediator, IOptions<AppConfiguration> appConfiguration) : TimedHostedService(logger, appConfiguration)
 {
     protected override string TaskName => "ScanBlacklistProviders";
 
     protected override async Task ExecuteTimedTask(object? state = null)
     {
-        using var scope = _serviceProvider.CreateScope();
-        var mediator = scope.ServiceProvider.GetRequiredService<IMediator>();
-        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
-            
-        var domains = configuration.GetSection("DNS-BLM:Domains").Get<List<string>>();
-        
-        if (domains == null) throw new Exception("Domains not found");
-        await mediator.Send(new ScanBlacklistCommand(domains));
+        await mediator.Send(new ScanBlacklistCommand(appConfiguration.Value.Domains));
     }
 }

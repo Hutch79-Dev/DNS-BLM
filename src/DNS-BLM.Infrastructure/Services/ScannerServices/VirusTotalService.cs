@@ -23,7 +23,7 @@ public class VirusTotalService : IBlacklistScanner
         _logger = logger;
     }
 
-    public async Task Scan(List<string> domains, CancellationToken cancellationToken = default)
+    public async Task Scan(string[] domains, CancellationToken cancellationToken = default)
     {
         var client = _httpClientFactory.CreateClient(ScannerName);
         foreach (var domain in domains)

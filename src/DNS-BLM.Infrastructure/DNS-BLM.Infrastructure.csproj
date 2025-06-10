@@ -11,4 +11,8 @@
       <PackageReference Include="Sentry.AspNetCore" Version="5.4.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\DNS-BLM.Domain\DNS-BLM.Domain.csproj" />
+    </ItemGroup>
+
 </Project>
