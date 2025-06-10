@@ -1,5 +1,11 @@
 # DNS-BLM => DNS Blocklist Monitoring
-DNS-BLM is a tool that monitors blocklists (currently utilizing VirusTotal) to check if your domains are flagged as malicious.
+**TL;DR**: DNS-BLM is a tool that monitors blocklists (currently utilizing VirusTotal) to check if your domains are flagged as malicious, and notifys you if they are.
+
+Maybe you know the trouble of Block lists.
+You just want to quickly go to one of your services at school or at work, and it does not load. Maybe you try it with your mobile and then notice your domain is blocked. After digging around a bit, you may figure out it's listed on a Block list.
+It happened to me twice now, and I hate it. Especially since I noticed it after it's already too late.
+
+That's why I created DNS-BLM (DNS Block List Monitor). It uses VirusTotal to scan your domains against ~95 Block lists and notify you by mail if they're listed as suspicious or malicious.
 
 ## Installation
 Copy the Docker Compose file below and update the environment variables.  
