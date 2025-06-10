@@ -119,7 +119,6 @@ public class VirusTotalService : IBlacklistScanner
                 break;
             }
             
-            // Exponential backoff with cancellation support
             cancellationToken.ThrowIfCancellationRequested();
             var delay = CalculateBackoffTime(attempt);
             _logger.LogDebug("No valide result for domain {Domain}. Wait for {delay} seconds before retrying.", domain, delay);
@@ -160,14 +159,14 @@ public class VirusTotalService : IBlacklistScanner
     private static int CalculateBackoffTime(int numberOfAttempts)
     {
         numberOfAttempts += 3; // Increase attempts to skip 1 and 5 second delays
-        double totalMilliseconds = 0;
+        int totalSeconds = 0;
 
         for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
         {
             // Each attempt adds attempt² seconds of delay
-            totalMilliseconds += attempt * attempt * 1000;
+            totalSeconds += attempt * attempt;
         }
 
-        return (int)(totalMilliseconds / 1000);
+        return totalSeconds;
     }
 }
