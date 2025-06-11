@@ -5,5 +5,5 @@ namespace DNS_BLM.Domain.Configuration;
 public class TimedTasksSchedulesConfiguration
 {
     [Required]
-    public string ScanBlacklistProviders { get; init; } = "9 6 * * *";
+    public string ScanBlacklistProviders { get; init; } = "20 4 * * *";
 }
