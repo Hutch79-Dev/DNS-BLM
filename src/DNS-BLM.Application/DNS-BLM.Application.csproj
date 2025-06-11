@@ -14,6 +14,7 @@
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\DNS-BLM.Domain\DNS-BLM.Domain.csproj" />
       <ProjectReference Include="..\DNS-BLM.Infrastructure\DNS-BLM.Infrastructure.csproj" />
     </ItemGroup>
 

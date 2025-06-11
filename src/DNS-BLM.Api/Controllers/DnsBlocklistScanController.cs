@@ -1,30 +1,24 @@
 using DNS_BLM.Application.Commands;
+using DNS_BLM.Domain.Configuration;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 
 namespace DNS_BLM.Api.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-public class DnsBlocklistScanController : ControllerBase
+public class DnsBlocklistScanController(IMediator mediator, IOptions<AppConfiguration> appConfiguration) : ControllerBase
 {
-    private readonly IMediator _mediator;
-    private readonly IConfiguration _configuration;
-
-    public DnsBlocklistScanController(IMediator mediator, IConfiguration configuration)
-    {
-        _mediator = mediator;
-        _configuration = configuration;
-    }
 
     [HttpGet("ScanConfiguredDomains", Name = "ScanConfiguredDomains")]
     public async Task<string> ScanConfiguredDomains()
     {
-        var domains = _configuration.GetSection("DNS-BLM:Domains").Get<List<string>>();
+        var domains = appConfiguration.Value.Domains;
         
         if (domains == null) throw new Exception("Domains not found");
         
-        return await _mediator.Send(new ScanBlacklistCommand(domains, false));
+        return await mediator.Send(new ScanBlacklistCommand(domains, false));
     }
 
     // [HttpGet("ScanCustomDomain", Name = "ScanCustomDomain")]

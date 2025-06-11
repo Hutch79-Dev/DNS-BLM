@@ -9,7 +9,7 @@ namespace DNS_BLM.Application;
 
 public static class ModuleRegistry
 {
-    public static void AddApplicationModule(this IServiceCollection services, IConfiguration configuration)
+    public static void AddApplicationModule(this IServiceCollection services)
     {
         // services.AddValidatorsFromAssembly(typeof(ModuleRegistry).Assembly);
         services.AddMediatR(cfg =>

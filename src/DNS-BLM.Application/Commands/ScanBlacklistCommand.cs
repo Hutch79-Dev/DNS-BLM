@@ -5,9 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace DNS_BLM.Application.Commands
 {
-    public class ScanBlacklistCommand(List<string> domains, bool sendMail = true) : IRequest<string>
+    public class ScanBlacklistCommand(string[] domains, bool sendMail = true) : IRequest<string>
     {
-        public List<string> Domains { get; } = domains;
+        public string[] Domains { get; } = domains;
         public bool SendMail { get; } = sendMail;
     }
 
@@ -24,9 +24,9 @@ namespace DNS_BLM.Application.Commands
             {
                 var scannerName = scanner.ScannerName;
                 
-                logger.LogInformation("Starting {ScannerName} scan for {DomainsCount} domains", scannerName, request.Domains.Count);
+                logger.LogInformation("Starting {ScannerName} scan for {DomainsCount} domains", scannerName, request.Domains.Length);
                 await scanner.Scan(request.Domains, cancellationToken);
-                logger.LogInformation("Completed {ScannerName} scan for {DomainsCount} domains", scannerName, request.Domains.Count);
+                logger.LogInformation("Completed {ScannerName} scan for {DomainsCount} domains", scannerName, request.Domains.Length);
             }
             var results = messageService.GetResults();
             messageService.Clear();
