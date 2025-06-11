@@ -1,6 +1,6 @@
 using System.Net;
 using System.Net.Mail;
-using DNS_BLM.Api;
+using DNS_BLM.Domain.Configuration;
 using DNS_BLM.Infrastructure.Services.ServiceInterfaces;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;

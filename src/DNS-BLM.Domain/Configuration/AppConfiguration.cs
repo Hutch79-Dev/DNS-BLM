@@ -1,11 +1,7 @@
-using System.ComponentModel;
-using System.Diagnostics.CodeAnalysis;
-using Microsoft.Extensions.Configuration;
+using System.ComponentModel.DataAnnotations;
 
-namespace DNS_BLM.Api
+namespace DNS_BLM.Domain.Configuration
 {
-    using System.ComponentModel.DataAnnotations;
-
     public class AppConfiguration
     {
         public bool Debug { get; init; } = false;

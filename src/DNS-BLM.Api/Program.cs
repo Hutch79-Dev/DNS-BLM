@@ -1,8 +1,8 @@
 using System.Reflection;
-using DNS_BLM.Api;
 using DNS_BLM.Api.Services;
 using DNS_BLM.Api.TimedTasks;
 using DNS_BLM.Application;
+using DNS_BLM.Domain.Configuration;
 using DNS_BLM.Infrastructure;
 using Scalar.AspNetCore;
 using Sentry.Extensibility;

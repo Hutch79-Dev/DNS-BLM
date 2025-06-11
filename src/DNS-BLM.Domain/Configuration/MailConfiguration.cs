@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace DNS_BLM.Api;
+namespace DNS_BLM.Domain.Configuration;
 
 public class MailConfiguration
 {

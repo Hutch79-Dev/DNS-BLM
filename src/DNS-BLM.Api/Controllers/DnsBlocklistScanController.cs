@@ -1,4 +1,5 @@
 using DNS_BLM.Application.Commands;
+using DNS_BLM.Domain.Configuration;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;

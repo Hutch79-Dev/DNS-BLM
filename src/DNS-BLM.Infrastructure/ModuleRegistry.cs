@@ -1,5 +1,5 @@
 using System.Net.Http.Headers;
-using DNS_BLM.Api;
+using DNS_BLM.Domain.Configuration;
 using DNS_BLM.Infrastructure.Services;
 using DNS_BLM.Infrastructure.Services.NotificationServices;
 using DNS_BLM.Infrastructure.Services.ScannerServices;

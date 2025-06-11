@@ -1,4 +1,5 @@
 ﻿using Cronos;
+using DNS_BLM.Domain.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace DNS_BLM.Api.TimedTasks;
