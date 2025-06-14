@@ -8,9 +8,9 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="MediatR" Version="12.4.1" />
-      <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.3" />
-      <PackageReference Include="Sentry.AspNetCore" Version="5.4.0" />
+      <PackageReference Include="MediatR" Version="12.5.0" />
+      <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.6" />
+      <PackageReference Include="Sentry.AspNetCore" Version="5.10.0" />
     </ItemGroup>
 
     <ItemGroup>
