@@ -15,6 +15,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+      - name: Set application version from Git tag
+        shell: bash
+        run: |
+          TAG_VERSION=$(echo "${{ github.ref_name }}" | sed 's/^v//')
+          sed -i "s|<Version>.*</Version>|<Version>$TAG_VERSION</Version>|" Directory.Build.props
+
       - name: Lowercase repository name
         id: lowercase
         run: echo "repo_lower=$(echo '${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
