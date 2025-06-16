@@ -7,6 +7,14 @@ It happened to me twice now, and I hate it. Especially since I noticed it after 
 
 That's why I created DNS-BLM (DNS Block List Monitor). It uses VirusTotal to scan your domains against ~95 Block lists and notify you by mail if they're listed as suspicious or malicious.
 
+## Future development
+
+To plan future development, I use issues and categorize them into Milestones. Every Milestone represents a List of tasks which need to be done before the next minor or major release. 
+
+Bug fixes do not necessarily get tracked by Milestones.
+
+A list of current Milestones can be found here: [Milestones](https://github.com/Hutch79/DNS-BLM/milestones?sort=title&direction=asc)
+
 ## Installation
 Copy the Docker Compose file below and update the environment variables.  
 Once done, you can start it using `docker compose up -d`.
