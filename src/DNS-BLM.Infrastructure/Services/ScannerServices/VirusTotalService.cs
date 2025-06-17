@@ -10,17 +10,21 @@ public class VirusTotalService : IBlacklistScanner
     private readonly IHttpClientFactory _httpClientFactory;
     private readonly MessageService _messageService;
     private readonly ILogger<VirusTotalService> _logger;
+    private readonly RetryService _retryService;
 
     public string ScannerName => "VirusTotal";
 
     public VirusTotalService(
         IHttpClientFactory httpClientFactory,
         MessageService messageService,
-        ILogger<VirusTotalService> logger)
+        ILogger<VirusTotalService> logger,
+        RetryService  retryService
+        )
     {
         _httpClientFactory = httpClientFactory;
         _messageService = messageService;
         _logger = logger;
+        _retryService = retryService;
     }
 
     public async Task Scan(string[] domains, CancellationToken cancellationToken = default)
@@ -94,8 +98,8 @@ public class VirusTotalService : IBlacklistScanner
         int statsMalicious = 0;
         int statsSuspicious = 0;
         int maxAttempts = 3;
-
-        for (int attempt = 0; attempt <= maxAttempts; attempt++)
+        
+        var result = await _retryService.Retry(async () =>
         {
             var response = await client.GetAsync($"analyses/{analysisId}", cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -108,22 +112,22 @@ public class VirusTotalService : IBlacklistScanner
             if (status == "failed")
             {
                 _logger.LogError("The analysis for Domain {Domain} has failed", domain);
-                return;
+                return null;
             }
 
             if (status == "completed")
             {
                 statsMalicious = attributes.GetProperty("stats").GetProperty("malicious").GetInt32();
                 statsSuspicious = attributes.GetProperty("stats").GetProperty("suspicious").GetInt32();
-                _logger.LogDebug("The analysis for Domain {Domain} has succeeded after {attempt}/{maxAttempts} attempts.", domain, attempt, maxAttempts);
-                break;
+                _logger.LogDebug("The analysis for Domain {Domain} has succeeded.", domain);
+                return new scanResult()
+                {
+                    malicious = statsMalicious,
+                    suspicious = statsSuspicious,
+                };
             }
-            
-            cancellationToken.ThrowIfCancellationRequested();
-            var delay = CalculateBackoffTime(attempt);
-            _logger.LogDebug("No valide result for domain {Domain}. Wait for {delay} seconds before retrying.", domain, delay);
-            await Task.Delay(delay * 1000, cancellationToken);
-        }
+            return null;
+        }, 3);
 
         if (status != "completed")
         {
@@ -149,24 +153,11 @@ public class VirusTotalService : IBlacklistScanner
         }
 
         _messageService.AddResult(scanResult);
+
     }
-
-    /// <summary>
-    /// Returns the delay for a given retry in seconds
-    /// </summary>
-    /// <param name="numberOfAttempts"></param>
-    /// <returns></returns>
-    private static int CalculateBackoffTime(int numberOfAttempts)
+    public class scanResult
     {
-        numberOfAttempts += 3; // Increase attempts to skip 1 and 5 second delays
-        int totalSeconds = 0;
-
-        for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
-        {
-            // Each attempt adds attempt² seconds of delay
-            totalSeconds += attempt * attempt;
-        }
-
-        return totalSeconds;
+        public int malicious;
+        public int suspicious;
     }
 }
