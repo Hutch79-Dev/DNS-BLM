@@ -58,3 +58,5 @@ To run this project, you will need to add the following environment variables to
 | `DNS-BLM__Mail__EnableSsl` | Enable SSL for SMTP? | True | No |
 | `DNS-BLM__Domains__X` | Replace `X` with a number: Domain to scan |    | Yes (minimum 1 domain required) |
 | `DNS-BLM__TimedTasks__ScanBlacklistProviders` | Cron expression when to execute the scan | 20 4 \* \* \* (4:20 am) | No |
+
+![Alt](https://repobeats.axiom.co/api/embed/cfc395587f18daea353bfbceb04dc1d89903283d.svg "Repobeats analytics image")
