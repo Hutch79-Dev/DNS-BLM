@@ -7,7 +7,7 @@ namespace DNS_BLM.Infrastructure.Services
         /// </summary>
         /// <typeparam name="TResult">The return type of the function.</typeparam>
         /// <param name="func">The asynchronous function to execute.</param>
-        /// <param name="maxAttempts">The maximum number of attempts to make.</param>
+        /// <param name="maxAttempts">The maximum number of attempts to make. Must be 1 or higher. Defaults to 3</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
         /// <returns>The result of the function if successful, or the result of the last attempt if all retries fail.</returns>
         /// <remarks>
@@ -19,7 +19,7 @@ namespace DNS_BLM.Infrastructure.Services
             if (maxAttempts <= 0)
                 throw new ArgumentOutOfRangeException(nameof(maxAttempts));
             
-            RetryResult<TResult> result = new RetryResult<TResult>() { };
+            RetryResult<TResult> result = new() { };
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 try
@@ -50,7 +50,7 @@ namespace DNS_BLM.Infrastructure.Services
         /// <returns></returns>
         private int CalculateBackoffTime(int numberOfAttempts)
         {
-            numberOfAttempts += 3; // Increase attempts to skip 1 and 5 second delays
+            numberOfAttempts += 1; // Increase attempts to skip 1-second delay
             int totalSeconds = 0;
 
             for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
@@ -59,7 +59,7 @@ namespace DNS_BLM.Infrastructure.Services
                 totalSeconds += attempt * attempt;
             }
 
-            return totalSeconds;
+            return Math.Max(totalSeconds, 30);
         }
     }
 
