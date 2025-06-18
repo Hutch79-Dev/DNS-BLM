@@ -59,4 +59,13 @@ To run this project, you will need to add the following environment variables to
 | `DNS-BLM__Domains__X` | Replace `X` with a number: Domain to scan |    | Yes (minimum 1 domain required) |
 | `DNS-BLM__TimedTasks__ScanBlacklistProviders` | Cron expression when to execute the scan | 20 4 \* \* \* (4:20 am) | No |
 
+# Stats
 ![Alt](https://repobeats.axiom.co/api/embed/cfc395587f18daea353bfbceb04dc1d89903283d.svg "Repobeats analytics image")
+
+<a href="https://www.star-history.com/#hutch79/dns-blm&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hutch79/dns-blm&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hutch79/dns-blm&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hutch79/dns-blm&type=Date" />
+ </picture>
+</a>
