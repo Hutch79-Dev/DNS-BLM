@@ -14,15 +14,19 @@ namespace DNS_BLM.Infrastructure.Services
         /// This method retries the provided function up to <paramref name="maxAttempts"/> times.
         /// It swallows exceptions on intermediate attempts and applies an exponential backoff delay before retrying.
         /// </remarks>
-        public async Task<TResult> Retry<TResult>(Func<Task<TResult>> func, int maxAttempts, CancellationToken cancellationToken = default)
+        public async Task<TResult> Retry<TResult>(Func<Task<RetryResult<TResult>>> func, int maxAttempts = 3, CancellationToken cancellationToken = default)
         {
+            if (maxAttempts <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxAttempts));
+            
+            RetryResult<TResult> result = new RetryResult<TResult>() { };
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 try
                 {
-                    var result = await func();
-                    if (result is not null)
-                        return result;
+                    result = await func();
+                    if (result.IsSuccess)
+                        return result.Result;
                 }
                 catch when (attempt < maxAttempts)
                 {
@@ -36,7 +40,7 @@ namespace DNS_BLM.Infrastructure.Services
                 }
             }
         
-            return await func();
+            return result.Result;
         }
     
         /// <summary>
@@ -57,5 +61,11 @@ namespace DNS_BLM.Infrastructure.Services
 
             return totalSeconds;
         }
+    }
+
+    public class RetryResult<T>()
+    {
+        public T Result {get;set;}
+        public bool IsSuccess {get;set;}
     }
 }
