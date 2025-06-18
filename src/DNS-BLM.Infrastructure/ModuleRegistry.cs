@@ -15,7 +15,7 @@ public static class ModuleRegistry
     public static void AddInfrastructureModule(this IServiceCollection services, AppConfiguration appConfiguration)
     {
         services.AddSingleton<INotificationService, MailNotificationService>();
-        services.AddSingleton<MessageService>();
+        services.AddScoped<MessageService>();
 
         string? virusTotalApiKey = appConfiguration.ApiCredentials.VirusTotal;
 
