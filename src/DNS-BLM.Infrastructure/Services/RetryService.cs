@@ -1,6 +1,8 @@
+using Microsoft.Extensions.Logging;
+
 namespace DNS_BLM.Infrastructure.Services
 {
-    public class RetryService
+    public class RetryService(ILogger<RetryService> logger)
     {
         /// <summary>
         /// Executes a function with retry logic and exponential backoff.
@@ -14,43 +16,48 @@ namespace DNS_BLM.Infrastructure.Services
         /// This method retries the provided function up to <paramref name="maxAttempts"/> times.
         /// It swallows exceptions on intermediate attempts and applies an exponential backoff delay before retrying.
         /// </remarks>
-        public async Task<TResult> Retry<TResult>(Func<Task<RetryResult<TResult>>> func, int maxAttempts = 3, CancellationToken cancellationToken = default)
+        public async Task<TResult?> Retry<TResult>(Func<Task<RetryResult<TResult>?>> func, int maxAttempts = 3, CancellationToken cancellationToken = default)
         {
             if (maxAttempts <= 0)
                 throw new ArgumentOutOfRangeException(nameof(maxAttempts));
-            
-            RetryResult<TResult> result = new() { };
+
+            RetryResult<TResult>? result = new() { };
             for (int attempt = 1; attempt <= maxAttempts; attempt++)
             {
                 try
                 {
                     result = await func();
-                    if (result.IsSuccess)
-                        return result.Result;
+                    if (result is not null)
+                    {
+                        if (result.IsSuccess)
+                            return result.Result;
+                    }
                 }
                 catch when (attempt < maxAttempts)
                 {
                     // Swallow exception and retry
                 }
-            
+
                 if (attempt < maxAttempts)
                 {
-                    var delay = CalculateBackoffTime(attempt);
-                    await Task.Delay(delay, cancellationToken);
+                    var delay = CalculateBackoffTimeSeconds(attempt);
+                    logger.LogDebug("Retry not successful - Delay for {Delay} seconds", delay);
+                    await Task.Delay(delay * 1000, cancellationToken);
                 }
             }
-        
-            return result.Result;
+            if (result is not null)
+                return result.Result;
+            return default;
         }
-    
+
         /// <summary>
         /// Returns the delay for a given retry in seconds
         /// </summary>
         /// <param name="numberOfAttempts"></param>
         /// <returns></returns>
-        private int CalculateBackoffTime(int numberOfAttempts)
+        private int CalculateBackoffTimeSeconds(int numberOfAttempts)
         {
-            numberOfAttempts += 1; // Increase attempts to skip 1-second delay
+            numberOfAttempts += 1; // Increase attempt to skip small delays
             int totalSeconds = 0;
 
             for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
@@ -59,13 +66,13 @@ namespace DNS_BLM.Infrastructure.Services
                 totalSeconds += attempt * attempt;
             }
 
-            return Math.Max(totalSeconds, 30);
+            return Math.Min(totalSeconds, 30);
         }
     }
 
     public class RetryResult<T>()
     {
-        public T Result {get;set;}
-        public bool IsSuccess {get;set;}
+        public T Result { get; set; }
+        public bool IsSuccess { get; set; }
     }
 }

@@ -94,9 +94,6 @@ public class VirusTotalService : IBlacklistScanner
             return;
         }
 
-        string status = string.Empty;
-        int statsMalicious = 0;
-        int statsSuspicious = 0;
         int maxAttempts = 3;
         
         var result = await _retryService.Retry(async () =>
@@ -107,7 +104,7 @@ public class VirusTotalService : IBlacklistScanner
 
             using var doc = JsonDocument.Parse(responseBody);
             var attributes = doc.RootElement.GetProperty("data").GetProperty("attributes");
-            status = attributes.GetProperty("status").GetString();
+            string status = attributes.GetProperty("status").GetString();
 
             if (status == "failed")
             {
@@ -117,19 +114,27 @@ public class VirusTotalService : IBlacklistScanner
 
             if (status == "completed")
             {
-                statsMalicious = attributes.GetProperty("stats").GetProperty("malicious").GetInt32();
-                statsSuspicious = attributes.GetProperty("stats").GetProperty("suspicious").GetInt32();
+                int statsMalicious = attributes.GetProperty("stats").GetProperty("malicious").GetInt32();
+                int statsSuspicious = attributes.GetProperty("stats").GetProperty("suspicious").GetInt32();
                 _logger.LogDebug("The analysis for Domain {Domain} has succeeded.", domain);
-                return new scanResult()
+                return new RetryResult<RetryScanResult>
                 {
-                    malicious = statsMalicious,
-                    suspicious = statsSuspicious,
+                    IsSuccess = true,
+                    Result = new RetryScanResult()
+                    {
+                        Malicious = statsMalicious,
+                        Suspicious = statsSuspicious,
+                        status = status
+                    }
                 };
             }
             return null;
-        }, 3);
+        }, maxAttempts);
 
-        if (status != "completed")
+        if (result is null)
+            _logger.LogWarning("Scann for domain {Domain} failed", domain);
+        
+        if (result.status != "completed")
         {
             _logger.LogError("Maximum retries ({maxAttempts}) reached while analyzing domain {Domain}", maxAttempts, domain);
             return;
@@ -138,7 +143,7 @@ public class VirusTotalService : IBlacklistScanner
         var scanResult = new ScanResult
         {
             Domain = domain,
-            IsBlacklisted = statsMalicious > 0 || statsSuspicious > 0,
+            IsBlacklisted = result.Malicious > 0 || result.Suspicious > 0,
             ScannerName = ScannerName,
             ScanResultUrl = $"https://www.virustotal.com/gui/domain-analysis/{analysisId}"
         };
@@ -155,9 +160,11 @@ public class VirusTotalService : IBlacklistScanner
         _messageService.AddResult(scanResult);
 
     }
-    public class scanResult
+
+    private class RetryScanResult
     {
-        public int malicious;
-        public int suspicious;
+        public int Malicious;
+        public int Suspicious;
+        public string status;
     }
 }
