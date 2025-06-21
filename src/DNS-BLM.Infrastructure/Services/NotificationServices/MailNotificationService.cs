@@ -22,16 +22,15 @@ public class MailNotificationService(IConfiguration configuration, ILogger<MailN
             try
             {
                 using var client = CreateSmtpClient();
-                var from = configuration.GetValue<string>("DNS-BLM:Mail:From");
                 using (var mailMessage = new MailMessage
                        {
-                           From = new MailAddress(from),
+                           From = new MailAddress(appConfiguration.Value.Mail.From),
                            Subject = subject,
                            Body = message,
                            IsBodyHtml = false
                        })
                 {
-                    var reportReceiver = configuration.GetValue<string>("DNS-BLM:ReportReceiver");
+                    var reportReceiver = appConfiguration.Value.ReportReceiver;
                     ArgumentException.ThrowIfNullOrWhiteSpace(reportReceiver, nameof(reportReceiver));
                     mailMessage.To.Add(reportReceiver);
                     await client.SendMailAsync(mailMessage);

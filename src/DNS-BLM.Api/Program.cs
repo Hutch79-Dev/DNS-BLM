@@ -17,7 +17,6 @@ var dnsBlmSettings = builder.Configuration.GetSection("DNS-BLM").Get<AppConfigur
 
 if (dnsBlmSettings is null)
     throw new ArgumentNullException(nameof(dnsBlmSettings), "No settings provided.");
-builder.Services.AddSingleton(dnsBlmSettings);
 
 if (dnsBlmSettings.Sentry is not null)
 {
