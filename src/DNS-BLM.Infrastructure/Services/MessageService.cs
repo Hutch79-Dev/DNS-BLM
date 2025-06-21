@@ -6,7 +6,7 @@ namespace DNS_BLM.Infrastructure.Services;
 
 public class MessageService(ILogger<MessageService> logger)
 {
-    private ConcurrentBag<ScanResult> _results;
+    private ConcurrentBag<ScanResult> _results = [];
     private HashSet<string> _domains = [];
 
     public void AddResult(ScanResult result)
