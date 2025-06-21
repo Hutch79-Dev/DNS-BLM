@@ -111,7 +111,10 @@ public class VirusTotalService(
         }, maxAttempts, cancellationToken);
 
         if (result is null)
+        {
             logger.LogWarning("The analysis for Domain {Domain} has failed", domain);
+            return;
+        }
 
         if (result.status != "completed")
         {
