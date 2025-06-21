@@ -4,9 +4,7 @@ using DNS_BLM.Infrastructure.Services;
 using DNS_BLM.Infrastructure.Services.NotificationServices;
 using DNS_BLM.Infrastructure.Services.ScannerServices;
 using DNS_BLM.Infrastructure.Services.ServiceInterfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Options;
 
 namespace DNS_BLM.Infrastructure;
 
@@ -15,12 +13,12 @@ public static class ModuleRegistry
     public static void AddInfrastructureModule(this IServiceCollection services, AppConfiguration appConfiguration)
     {
         services.AddSingleton<INotificationService, MailNotificationService>();
-        services.AddSingleton<MessageService>();
+        services.AddScoped<MessageService>();
         services.AddSingleton<RetryService>();
 
         string? virusTotalApiKey = appConfiguration.ApiCredentials.VirusTotal;
 
-        services.AddSingleton<IBlacklistScanner, VirusTotalService>();
+        services.AddScoped<IBlacklistScanner, VirusTotalService>();
         services.AddHttpClient("VirusTotal", client =>
         {
             client.BaseAddress = new Uri("https://www.virustotal.com/api/v3/");

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using DNS_BLM.Infrastructure.Dtos;
 using Microsoft.Extensions.Logging;
 
@@ -5,7 +6,7 @@ namespace DNS_BLM.Infrastructure.Services;
 
 public class MessageService(ILogger<MessageService> logger)
 {
-    private List<ScanResult> _results = [];
+    private ConcurrentBag<ScanResult> _results = [];
     private HashSet<string> _domains = [];
 
     public void AddResult(ScanResult result)
