@@ -24,10 +24,10 @@ if (dnsBlmSettings.Sentry is not null)
     {
         o.Dsn = dnsBlmSettings.Sentry.Dsn;
         o.TracesSampleRate = dnsBlmSettings.Sentry.TracesSampleRate;
-        
+
         if (!Enum.TryParse<RequestSize>(dnsBlmSettings.Sentry.MaxRequestBodySize, out var requestSize))
             throw new InvalidOperationException($"Invalid RequestSize value: {dnsBlmSettings.Sentry.MaxRequestBodySize}");
-        
+
         o.MaxRequestBodySize = requestSize;
         o.SendDefaultPii = dnsBlmSettings.Sentry.SendDefaultPii;
     });
@@ -37,7 +37,6 @@ if (dnsBlmSettings.Debug)
     builder.Logging.AddFilter("DNS_BLM", LogLevel.Debug);
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
 builder.Services.AddApplicationModule();
@@ -48,11 +47,8 @@ builder.Services.AddTimedTaskModules();
 
 var app = builder.Build();
 
-// if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-    app.MapScalarApiReference();
-}
+app.MapOpenApi();
+app.MapScalarApiReference();
 
 app.UseHttpsRedirection();
 
