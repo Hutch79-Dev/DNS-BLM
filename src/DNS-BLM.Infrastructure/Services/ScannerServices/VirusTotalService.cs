@@ -5,83 +5,62 @@ using Microsoft.Extensions.Logging;
 
 namespace DNS_BLM.Infrastructure.Services.ScannerServices;
 
-public class VirusTotalService : IBlacklistScanner
+public class VirusTotalService(
+    IHttpClientFactory httpClientFactory,
+    MessageService messageService,
+    ILogger<VirusTotalService> logger,
+    RetryService retryService)
+    : IBlacklistScanner
 {
-    private readonly IHttpClientFactory _httpClientFactory;
-    private readonly MessageService _messageService;
-    private readonly ILogger<VirusTotalService> _logger;
-    private readonly RetryService _retryService;
-
     public string ScannerName => "VirusTotal";
-
-    public VirusTotalService(
-        IHttpClientFactory httpClientFactory,
-        MessageService messageService,
-        ILogger<VirusTotalService> logger,
-        RetryService  retryService
-        )
-    {
-        _httpClientFactory = httpClientFactory;
-        _messageService = messageService;
-        _logger = logger;
-        _retryService = retryService;
-    }
 
     public async Task Scan(string[] domains, CancellationToken cancellationToken = default)
     {
-        var client = _httpClientFactory.CreateClient(ScannerName);
+        var client = httpClientFactory.CreateClient(ScannerName);
         foreach (var domain in domains)
         {
-            _logger.LogInformation("Scanning domain {Domain} with {ScannerName}", domain, ScannerName);
+            logger.LogInformation("Scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             try
             {
-                int maxRetries = 3;
-                int currentRetry = 0;
-                string analysisResponseBody = null;
-
-                while (currentRetry <= maxRetries)
+                const int maxAttempts = 3;
+                var result = await retryService.Retry(async () =>
                 {
-                    try
+                    using HttpResponseMessage analysisResponse = await client.PostAsync($"domains/{domain}/analyse", new StringContent(string.Empty), cancellationToken);
+                    analysisResponse.EnsureSuccessStatusCode();
+                    var analysisResponseBody = await analysisResponse.Content.ReadAsStringAsync(cancellationToken);
+                    return new RetryResult<string>()
                     {
-                        using HttpResponseMessage analysisResponse = await client.PostAsync($"domains/{domain}/analyse", new StringContent(string.Empty), cancellationToken);
-                        analysisResponse.EnsureSuccessStatusCode();
-                        analysisResponseBody = await analysisResponse.Content.ReadAsStringAsync(cancellationToken);
-                        break;
-                    }
-                    catch (Exception ex) when (ex is HttpRequestException || ex is TaskCanceledException)
-                    {
-                        currentRetry++;
-                        if (currentRetry > maxRetries)
-                            throw;
-        
-                        int delay = 1000 * (int)Math.Pow(2, currentRetry - 1);
-                        await Task.Delay(delay, cancellationToken);
-                    }
-                }
+                        IsSuccess = true,
+                        Result = analysisResponseBody,
+                    };
+                }, maxAttempts, cancellationToken);
+
+                if (string.IsNullOrWhiteSpace(result))
+                    logger.LogError("Scanning domain {Domain} failed", domain);
 
                 string? analysisId;
-                using (var doc = JsonDocument.Parse(analysisResponseBody))
+                using (var doc = JsonDocument.Parse(result))
                 {
                     var root = doc.RootElement;
                     analysisId = root.GetProperty("data").GetProperty("id").GetString();
                 }
 
-                _logger.LogDebug("Received analysis ID {AnalysisId} for domain {Domain}", analysisId, domain);
+                logger.LogDebug("Received analysis ID {AnalysisId} for domain {Domain}", analysisId, domain);
 
                 await Task.Delay(5000, cancellationToken);
                 await Analyze(analysisId, domain, client, cancellationToken);
             }
             catch (HttpRequestException e)
             {
-                _logger.LogError(e, "HTTP error while scanning domain {Domain} with {ScannerName}", domain, ScannerName);
+                logger.LogError(e, "HTTP error while scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             }
             catch (JsonException e)
             {
-                _logger.LogError(e, "JSON parsing error while scanning domain {Domain} with {ScannerName}", domain, ScannerName);
+                logger.LogError(e, "JSON parsing error while scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             }
             catch (Exception e)
             {
-                _logger.LogError(e, "Unexpected error while scanning domain {Domain} with {ScannerName}", domain, ScannerName);
+                logger.LogError(e, "Unexpected error while scanning domain {Domain} with {ScannerName}", domain, ScannerName);
             }
         }
     }
@@ -90,13 +69,12 @@ public class VirusTotalService : IBlacklistScanner
     {
         if (string.IsNullOrWhiteSpace(analysisId))
         {
-            _logger.LogError("The analysis ID for Domain {Domain} must not be null!", domain);
+            logger.LogError("The analysis ID for Domain {Domain} must not be null!", domain);
             return;
         }
 
-        int maxAttempts = 3;
-        
-        var result = await _retryService.Retry(async () =>
+        const int maxAttempts = 3;
+        var result = await retryService.Retry(async () =>
         {
             var response = await client.GetAsync($"analyses/{analysisId}", cancellationToken);
             response.EnsureSuccessStatusCode();
@@ -108,7 +86,7 @@ public class VirusTotalService : IBlacklistScanner
 
             if (status == "failed")
             {
-                _logger.LogError("The analysis for Domain {Domain} has failed", domain);
+                logger.LogError("The analysis for Domain {Domain} has failed", domain);
                 return null;
             }
 
@@ -116,7 +94,7 @@ public class VirusTotalService : IBlacklistScanner
             {
                 int statsMalicious = attributes.GetProperty("stats").GetProperty("malicious").GetInt32();
                 int statsSuspicious = attributes.GetProperty("stats").GetProperty("suspicious").GetInt32();
-                _logger.LogDebug("The analysis for Domain {Domain} has succeeded.", domain);
+                logger.LogDebug("The analysis for Domain {Domain} has succeeded.", domain);
                 return new RetryResult<RetryScanResult>
                 {
                     IsSuccess = true,
@@ -128,15 +106,16 @@ public class VirusTotalService : IBlacklistScanner
                     }
                 };
             }
+
             return null;
-        }, maxAttempts);
+        }, maxAttempts, cancellationToken);
 
         if (result is null)
-            _logger.LogWarning("Scann for domain {Domain} failed", domain);
-        
+            logger.LogWarning("The analysis for Domain {Domain} has failed", domain);
+
         if (result.status != "completed")
         {
-            _logger.LogError("Maximum retries ({maxAttempts}) reached while analyzing domain {Domain}", maxAttempts, domain);
+            logger.LogError("Maximum retries ({maxAttempts}) reached while analyzing domain {Domain}", maxAttempts, domain);
             return;
         }
 
@@ -150,15 +129,14 @@ public class VirusTotalService : IBlacklistScanner
 
         if (scanResult.IsBlacklisted)
         {
-            _logger.LogInformation("Domain \"{Domain}\" is listed on {ScannerName}", domain, ScannerName);
+            logger.LogInformation("Domain \"{Domain}\" is listed on {ScannerName}", domain, ScannerName);
         }
         else
         {
-            _logger.LogInformation("Domain \"{Domain}\" is not listed on {ScannerName}", domain, ScannerName);
+            logger.LogInformation("Domain \"{Domain}\" is not listed on {ScannerName}", domain, ScannerName);
         }
 
-        _messageService.AddResult(scanResult);
-
+        messageService.AddResult(scanResult);
     }
 
     private class RetryScanResult
