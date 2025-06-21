@@ -7,6 +7,14 @@ It happened to me twice now, and I hate it. Especially since I noticed it after 
 
 That's why I created DNS-BLM (DNS Block List Monitor). It uses VirusTotal to scan your domains against ~95 Block lists and notify you by mail if they're listed as suspicious or malicious.
 
+## Future development
+
+To plan future development, I use issues and categorize them into Milestones. Every Milestone represents a List of tasks which need to be done before the next minor or major release. 
+
+Bug fixes do not necessarily get tracked by Milestones.
+
+A list of current Milestones can be found here: [Milestones](https://github.com/Hutch79/DNS-BLM/milestones?sort=title&direction=asc)
+
 ## Installation
 Copy the Docker Compose file below and update the environment variables.  
 Once done, you can start it using `docker compose up -d`.
@@ -50,3 +58,14 @@ To run this project, you will need to add the following environment variables to
 | `DNS-BLM__Mail__EnableSsl` | Enable SSL for SMTP? | True | No |
 | `DNS-BLM__Domains__X` | Replace `X` with a number: Domain to scan |    | Yes (minimum 1 domain required) |
 | `DNS-BLM__TimedTasks__ScanBlacklistProviders` | Cron expression when to execute the scan | 20 4 \* \* \* (4:20 am) | No |
+
+# Stats
+![Alt](https://repobeats.axiom.co/api/embed/cfc395587f18daea353bfbceb04dc1d89903283d.svg "Repobeats analytics image")
+
+<a href="https://www.star-history.com/#hutch79/dns-blm&Date">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=hutch79/dns-blm&type=Date&theme=dark" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=hutch79/dns-blm&type=Date" />
+   <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=hutch79/dns-blm&type=Date" />
+ </picture>
+</a>
