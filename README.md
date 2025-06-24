@@ -13,7 +13,11 @@ To plan future development, I use issues and categorize them into Milestones. Ev
 
 Bug fixes do not necessarily get tracked by Milestones.
 
-A list of current Milestones can be found here: [Milestones](https://github.com/Hutch79/DNS-BLM/milestones?sort=title&direction=asc)
+A list of current Milestones can be found here: [Milestones](https://github.com/Hutch79/DNS-BLM/milestones?sort=title&direction=asc)  
+
+If you want to support the developement financially, you can buy me a coffe here. We all know a developer is nothing without his coffee 🤪  
+
+<a href="https://www.buymeacoffee.com/hutch79" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" style="height: 40px !important;width: 145px !important;" ></a>
 
 ## Installation
 Copy the Docker Compose file below and update the environment variables.  
