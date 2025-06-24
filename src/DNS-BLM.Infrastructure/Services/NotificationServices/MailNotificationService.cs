@@ -1,14 +1,13 @@
-using System.Net;
-using System.Net.Mail;
 using DNS_BLM.Domain.Configuration;
 using DNS_BLM.Infrastructure.Services.ServiceInterfaces;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
+using SmtpClient = MailKit.Net.Smtp.SmtpClient;
 
 namespace DNS_BLM.Infrastructure.Services.NotificationServices;
 
-public class MailNotificationService(IConfiguration configuration, ILogger<MailNotificationService> logger, IOptions<AppConfiguration> appConfiguration) : INotificationService
+public class MailNotificationService(ILogger<MailNotificationService> logger, IOptions<AppConfiguration> appConfiguration) : INotificationService
 {
     public async Task Notify(string subject, string message)
     {
@@ -22,23 +21,23 @@ public class MailNotificationService(IConfiguration configuration, ILogger<MailN
             try
             {
                 using var client = CreateSmtpClient();
-                using (var mailMessage = new MailMessage
-                       {
-                           From = new MailAddress(appConfiguration.Value.Mail.From),
-                           Subject = subject,
-                           Body = message,
-                           IsBodyHtml = false
-                       })
-                {
-                    var reportReceiver = appConfiguration.Value.ReportReceiver;
-                    ArgumentException.ThrowIfNullOrWhiteSpace(reportReceiver, nameof(reportReceiver));
-                    mailMessage.To.Add(reportReceiver);
-                    await client.SendMailAsync(mailMessage);
-                    logger.LogDebug("Successfully send Mail Notification");
-                    return;
-                }
+                var mailMessage = new MimeMessage();
+                
+                var reportReceiver = appConfiguration.Value.ReportReceiver;
+                ArgumentException.ThrowIfNullOrWhiteSpace(reportReceiver, nameof(reportReceiver));
+                
+                mailMessage.From.Add(MailboxAddress.Parse(appConfiguration.Value.Mail.From));
+                mailMessage.To.Add(MailboxAddress.Parse(reportReceiver));
+                mailMessage.Subject = subject;
+                mailMessage.Body = new TextPart("html") { Text = message };
+                
+                await client.SendAsync(mailMessage);
+                await client.DisconnectAsync(true);
+                
+                logger.LogDebug("Successfully send Mail Notification");
+                return;
             }
-            catch (SmtpException ex)
+            catch (Exception ex)
             {
                 retryCount++;
                 if (retryCount >= maxRetries)
@@ -58,12 +57,14 @@ public class MailNotificationService(IConfiguration configuration, ILogger<MailN
         var password = appConfiguration.Value.Mail.Password;
         var enableSsl = appConfiguration.Value.Mail.EnableSsl;
 
-        return new SmtpClient(host)
-        {
-            Port = port,
-            Credentials = new NetworkCredential(username, password),
-            EnableSsl = enableSsl,
-            Timeout = 30000
-        };
+        ArgumentException.ThrowIfNullOrWhiteSpace(host, nameof(host));
+        ArgumentException.ThrowIfNullOrWhiteSpace(username, nameof(username));
+        ArgumentException.ThrowIfNullOrWhiteSpace(password, nameof(password));
+        
+        var client = new SmtpClient();
+        client.Connect(host, port, enableSsl);
+        client.Authenticate(username, password);
+        
+        return client;
     }
 }
