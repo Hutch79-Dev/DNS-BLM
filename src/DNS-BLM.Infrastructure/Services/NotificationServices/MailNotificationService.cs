@@ -20,7 +20,7 @@ public class MailNotificationService(ILogger<MailNotificationService> logger, IO
         {
             try
             {
-                using var client = CreateSmtpClient();
+                using var client = await CreateSmtpClient();
                 var mailMessage = new MimeMessage();
                 
                 var reportReceiver = appConfiguration.Value.ReportReceiver;
@@ -29,7 +29,11 @@ public class MailNotificationService(ILogger<MailNotificationService> logger, IO
                 mailMessage.From.Add(MailboxAddress.Parse(appConfiguration.Value.Mail.From));
                 mailMessage.To.Add(MailboxAddress.Parse(reportReceiver));
                 mailMessage.Subject = subject;
-                mailMessage.Body = new TextPart("html") { Text = message };
+                
+                var builder = new BodyBuilder ();
+                builder.HtmlBody = message.Replace("\n", "<br/>");
+
+                mailMessage.Body = builder.ToMessageBody();
                 
                 await client.SendAsync(mailMessage);
                 await client.DisconnectAsync(true);
@@ -49,7 +53,7 @@ public class MailNotificationService(ILogger<MailNotificationService> logger, IO
         }
     }
 
-    private SmtpClient CreateSmtpClient()
+    private async Task<SmtpClient> CreateSmtpClient()
     {
         var host = appConfiguration.Value.Mail.Host;
         var port = appConfiguration.Value.Mail.Port;
@@ -62,8 +66,8 @@ public class MailNotificationService(ILogger<MailNotificationService> logger, IO
         ArgumentException.ThrowIfNullOrWhiteSpace(password, nameof(password));
         
         var client = new SmtpClient();
-        client.Connect(host, port, enableSsl);
-        client.Authenticate(username, password);
+        await client.ConnectAsync(host, port, enableSsl);
+        await client.AuthenticateAsync(username, password);
         
         return client;
     }
