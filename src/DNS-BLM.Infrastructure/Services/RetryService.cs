@@ -9,20 +9,20 @@ namespace DNS_BLM.Infrastructure.Services
         /// </summary>
         /// <typeparam name="TResult">The return type of the function.</typeparam>
         /// <param name="func">The asynchronous function to execute.</param>
-        /// <param name="maxAttempts">The maximum number of attempts to make. Must be 1 or higher. Defaults to 3</param>
+        /// <param name="maxRetrys">The maximum number of attempts to make. Must be 1 or higher. Defaults to 3</param>
         /// <param name="cancellationToken">A <see cref="CancellationToken"/> to observe while waiting for the task to complete.</param>
         /// <returns>The result of the function if successful, or the result of the last attempt if all retries fail.</returns>
         /// <remarks>
-        /// This method retries the provided function up to <paramref name="maxAttempts"/> times.
+        /// This method retries the provided function up to <paramref name="maxRetrys"/> times.
         /// It swallows exceptions on intermediate attempts and applies an exponential backoff delay before retrying.
         /// </remarks>
-        public async Task<TResult?> Retry<TResult>(Func<Task<RetryResult<TResult>?>> func, int maxAttempts = 3, CancellationToken cancellationToken = default)
+        public async Task<TResult?> Retry<TResult>(Func<Task<RetryResult<TResult>?>> func, int maxRetrys = 3, CancellationToken cancellationToken = default)
         {
-            if (maxAttempts <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxAttempts));
+            if (maxRetrys <= 0)
+                throw new ArgumentOutOfRangeException(nameof(maxRetrys));
 
             RetryResult<TResult>? result = new() { };
-            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            for (int attempt = 0; attempt <= maxRetrys; attempt++)
             {
                 try
                 {
@@ -33,12 +33,12 @@ namespace DNS_BLM.Infrastructure.Services
                             return result.Result;
                     }
                 }
-                catch when (attempt < maxAttempts)
+                catch when (attempt < maxRetrys)
                 {
                     // Swallow exception and retry
                 }
 
-                if (attempt < maxAttempts)
+                if (attempt < maxRetrys)
                 {
                     var delay = CalculateBackoffTimeSeconds(attempt);
                     logger.LogDebug("Retry not successful - Delay for {Delay} seconds", delay);
@@ -57,7 +57,7 @@ namespace DNS_BLM.Infrastructure.Services
         /// <returns></returns>
         private int CalculateBackoffTimeSeconds(int numberOfAttempts)
         {
-            numberOfAttempts += 1; // Increase attempt to skip small delays
+            numberOfAttempts += 2; // Increase attempt to skip small delays
             int totalSeconds = 0;
 
             for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
