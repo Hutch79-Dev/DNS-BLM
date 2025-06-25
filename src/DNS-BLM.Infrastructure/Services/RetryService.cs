@@ -22,7 +22,7 @@ namespace DNS_BLM.Infrastructure.Services
                 throw new ArgumentOutOfRangeException(nameof(maxAttempts));
 
             RetryResult<TResult>? result = new() { };
-            for (int attempt = 1; attempt <= maxAttempts; attempt++)
+            for (int attempt = 0; attempt <= maxAttempts; attempt++)
             {
                 try
                 {
@@ -57,7 +57,7 @@ namespace DNS_BLM.Infrastructure.Services
         /// <returns></returns>
         private int CalculateBackoffTimeSeconds(int numberOfAttempts)
         {
-            numberOfAttempts += 1; // Increase attempt to skip small delays
+            numberOfAttempts += 2; // Increase attempt to skip small delays
             int totalSeconds = 0;
 
             for (int attempt = 1; attempt <= numberOfAttempts; attempt++)
