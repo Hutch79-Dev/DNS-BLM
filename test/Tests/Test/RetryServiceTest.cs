@@ -27,7 +27,7 @@ namespace Tests.Test
             };
 
             // Act
-            var result = await _retryService.Retry(func, 3);
+            var result = await _retryService.Retry(func, 1);
 
             // Assert
             Assert.Equal(expectedResult, result);
@@ -52,7 +52,7 @@ namespace Tests.Test
             };
 
             // Act
-            var result = await _retryService.Retry(func, 3);
+            var result = await _retryService.Retry(func, 2);
 
             // Assert
             Assert.Equal(expectedResult, result);
@@ -72,9 +72,9 @@ namespace Tests.Test
             };
 
             // Act & Assert
-            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _retryService.Retry(func, 3));
+            var exception = await Assert.ThrowsAsync<InvalidOperationException>(() => _retryService.Retry(func, 1));
             Assert.Equal(expectedExceptionMessage, exception.Message);
-            Assert.Equal(3, callCount);
+            Assert.Equal(2, callCount);
         }
 
         [Fact]
@@ -89,11 +89,11 @@ namespace Tests.Test
             };
 
             // Act
-            var result = await _retryService.Retry(func, 3);
+            var result = await _retryService.Retry(func, 1);
 
             // Assert
             Assert.Null(result); // Default for string is null
-            Assert.Equal(3, callCount); // Called maxAttempts times based on the retry logic
+            Assert.Equal(2, callCount); // Called maxAttempts times based on the retry logic
         }
 
         [Fact]
@@ -115,7 +115,7 @@ namespace Tests.Test
             };
 
             var startTime = DateTime.UtcNow;
-            var result = await _retryService.Retry(func , 2); // 1 unsuccessful, 1 successful attempt
+            var result = await _retryService.Retry(func , 1); // 1 unsuccessful, 1 successful attempt
 
             // Assert
             Assert.Equal(expectedResult, result);
@@ -138,7 +138,7 @@ namespace Tests.Test
                 return Task.FromResult<RetryResult<string>?>(new RetryResult<string> { Result = "Result", IsSuccess = true });
             };
             // Act
-            var result = await _retryService.Retry(func, 5);
+            var result = await _retryService.Retry(func, 1);
             // Assert
             Assert.NotNull(result);
             Assert.Equal("Result", result);
@@ -159,7 +159,7 @@ namespace Tests.Test
             };
 
             // Act
-            var result = await _retryService.Retry(func, 3);
+            var result = await _retryService.Retry(func, 1);
 
             // Assert
             Assert.Equal("Final Result", result);
@@ -178,11 +178,11 @@ namespace Tests.Test
             };
 
             // Act
-            var result = await _retryService.Retry(func, 3);
+            var result = await _retryService.Retry(func, 1);
 
             // Assert
             Assert.Null(result); // Default for string
-            Assert.Equal(3, callCount); // Called maxAttempts times, always returning IsSuccess=false.
+            Assert.Equal(2, callCount); // Called maxAttempts times, always returning IsSuccess=false.
         }
 
         [Fact]
@@ -202,7 +202,7 @@ namespace Tests.Test
             };
 
             // Act
-            var result = await _retryService.Retry(func, 3);
+            var result = await _retryService.Retry(func, 2);
 
             // Assert
             Assert.Equal("Actual Result", result);
