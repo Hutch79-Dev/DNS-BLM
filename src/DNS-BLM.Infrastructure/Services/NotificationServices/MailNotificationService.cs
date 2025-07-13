@@ -31,7 +31,7 @@ public class MailNotificationService(ILogger<MailNotificationService> logger, IO
                 mailMessage.Subject = subject;
                 
                 var builder = new BodyBuilder ();
-                builder.HtmlBody = message.Replace("\n", "<br/>");
+                builder.HtmlBody = message;
 
                 mailMessage.Body = builder.ToMessageBody();
                 

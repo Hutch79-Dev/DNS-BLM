@@ -15,6 +15,7 @@ public static class ModuleRegistry
         services.AddSingleton<INotificationService, MailNotificationService>();
         services.AddScoped<MessageService>();
         services.AddSingleton<RetryService>();
+        services.AddSingleton<TemplateService>();
 
         string? virusTotalApiKey = appConfiguration.ApiCredentials.VirusTotal;
 
