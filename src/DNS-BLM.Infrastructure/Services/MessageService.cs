@@ -1,10 +1,12 @@
 using System.Collections.Concurrent;
+using DNS_BLM.Domain.Configuration;
 using DNS_BLM.Infrastructure.Dtos;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DNS_BLM.Infrastructure.Services;
 
-public class MessageService(ILogger<MessageService> logger)
+public class MessageService(ILogger<MessageService> logger, TemplateService templateService, IOptions<AppConfiguration> appConfiguration)
 {
     private ConcurrentBag<ScanResult> _results = [];
     private HashSet<string> _domains = [];
@@ -34,21 +36,9 @@ public class MessageService(ILogger<MessageService> logger)
         {
             logger.LogDebug($"{result.Domain}: {result.ScannerName} - {result.IsBlacklisted}");
         }
-
-        List<string> allResults = new List<string>();
-        foreach (var domain in _domains)
-        {
-            var domainResults = _results.Where(r => r.Domain == domain && r.IsBlacklisted).ToArray();
-            var result = ArrangeResults(domainResults);
-            if (result == null) continue;
-            allResults.Add(result);
-        }
-
-        var results = string.Join(Environment.NewLine, allResults);
-        if (String.IsNullOrWhiteSpace(results))
-            logger.LogError("No results available to return, despite passing previous checks!");
-        ArgumentException.ThrowIfNullOrWhiteSpace(results, nameof(results));
         
+        var domainResults = _results.Where(r => r.IsBlacklisted).ToArray();
+        var results = templateService.RenderTemplate(domainResults.ToList(), appConfiguration.Value.Mail.MailTemplate);
         return results;
     }
 

@@ -31,7 +31,7 @@ namespace DNS_BLM.Application.Commands
             var results = messageService.GetResults();
             messageService.Clear();
 
-            if (request.SendMail && results is not null)
+            if (request.SendMail && !string.IsNullOrWhiteSpace(results))
             {
                 await notificationService.Notify("DNS-BLM Scanning Results", results);
             }
@@ -39,7 +39,6 @@ namespace DNS_BLM.Application.Commands
             {
                 if (results is null)
                     results = "No blacklisted Domains.";
-                logger.LogInformation("Mail notification skipped as per request");
             }
             
             return results;

@@ -18,7 +18,7 @@ public class DnsBlocklistScanController(IMediator mediator, IOptions<AppConfigur
         
         if (domains == null) throw new Exception("Domains not found");
         
-        return await mediator.Send(new ScanBlacklistCommand(domains, false));
+        return await mediator.Send(new ScanBlacklistCommand(domains));
     }
 
     // [HttpGet("ScanCustomDomain", Name = "ScanCustomDomain")]

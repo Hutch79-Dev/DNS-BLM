@@ -22,4 +22,6 @@ public class MailConfiguration
 
     [Required]
     public bool EnableSsl { get; init; } = true;
+    public string MailTemplate { get; init; } = string.Empty;
+
 }

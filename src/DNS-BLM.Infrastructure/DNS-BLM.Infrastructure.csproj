@@ -8,6 +8,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+      <PackageReference Include="Handlebars.Net" Version="2.1.6" />
       <PackageReference Include="MailKit" Version="4.12.1" />
       <PackageReference Include="Sentry.AspNetCore" Version="5.10.0" />
     </ItemGroup>
